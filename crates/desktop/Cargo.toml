@@ -1,0 +1,31 @@
+[package]
+name = "ndm-app"
+description = "Next Download Manager — GPUI native desktop"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "nextdownloadmanager"
+path = "src/main.rs"
+
+[dependencies]
+gpui-kit = "=0.8.1"
+ndm-ipc.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+dirs.workspace = true
+url.workspace = true
+open.workspace = true
+rfd = "0.17.2"
+
+[lints]
+workspace = true
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6.5"
+objc2-foundation = { version = "0.3.2", default-features = false, features = ["std", "NSData"] }
+objc2-app-kit = { version = "0.3.2", default-features = false, features = ["std", "NSApplication", "NSImage"] }

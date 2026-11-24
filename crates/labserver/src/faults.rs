@@ -1,0 +1,294 @@
+//! Fault injection settings. One representation for both the server default (`--faults`) and
+//! per-URL overrides (query string): `rate=100000&max_conns=2&drop_after=1M`.
+
+use serde::{Deserialize, Deserializer, Serialize};
+
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct Faults {
+    /// Per-response speed cap, bytes/s.
+    #[serde(deserialize_with = "size_opt")]
+    pub rate: Option<u64>,
+    /// With a rate: a link rather than a quota. A response the client stopped reading catches
+    /// up with at most this much at once (what a real link's buffers hold), then goes on at the
+    /// rate; by default it is paced from its start, so it sends everything it fell behind by.
+    #[serde(deserialize_with = "size_opt")]
+    pub burst: Option<u64>,
+    /// One link every response of the server shares, bytes/s: each connection gets its turn on
+    /// it, so a connection alone takes all of it and n of them a share each, as on a real line
+    /// whose speed the connections divide (#896). On top of `rate`, which caps one response.
+    #[serde(deserialize_with = "size_opt")]
+    pub link_rate: Option<u64>,
+    /// Every Nth request is throttled to `slow_rate` (simulates one slow connection).
+    pub slow_every: Option<u64>,
+    #[serde(deserialize_with = "size_opt")]
+    pub slow_rate: Option<u64>,
+    /// Max concurrent responses per client IP; extra requests get 503.
+    pub max_conns: Option<u32>,
+    /// Abort the connection after sending this many body bytes.
+    #[serde(deserialize_with = "size_opt")]
+    pub drop_after: Option<u64>,
+    /// Apply `drop_after` only to every Nth request (default: every request).
+    pub drop_every: Option<u64>,
+    /// Every Nth request fails with 503.
+    pub fail_every: Option<u64>,
+    /// The first N requests fail with 503 (a server busy when the download starts).
+    pub fail_first: Option<u64>,
+    /// Ignore `Range` and always send the whole file with 200.
+    #[serde(deserialize_with = "flag_opt")]
+    pub no_range: Option<bool>,
+    /// Ignore `Range` on every Nth request only (a CDN edge without range support); the file
+    /// and its validators stay the same.
+    pub no_range_every: Option<u64>,
+    /// Answer with a small web page (a login wall) instead of the file.
+    #[serde(deserialize_with = "flag_opt")]
+    pub html: Option<bool>,
+    /// With `html`: the page's `Content-Type` instead of `text/html` (`none`: no type at all),
+    /// a page that sniffs as one without saying so (#701).
+    pub html_type: Option<String>,
+    /// With `html`: the page under the file's own name (`Content-Disposition: attachment` with
+    /// the path's name), as a file host's script sends it (#701).
+    #[serde(deserialize_with = "flag_opt")]
+    pub html_cd: Option<bool>,
+    /// The first N requests for this path and query get the file, every later one the web page
+    /// (`html`'s, with `html_type` and `html_cd`): a link that leads to a waiting page once
+    /// the download is resumed (#701).
+    pub html_after: Option<u64>,
+    /// With `html` or `html_after`: what comes instead of the waiting page (#1460): `challenge`
+    /// (a bot check's script page, `<html><script>…`, as text/html, a one-time link's host's
+    /// answer to a second request), `json` (a JSON error, as `application/json`) or `text` (a
+    /// line of text, as `text/plain`); `html_type` still sets the type.
+    pub html_body: Option<String>,
+    /// With `html` or `html_after`: the page without a `Content-Length`, chunked (#1460).
+    #[serde(deserialize_with = "flag_opt")]
+    pub html_chunked: Option<bool>,
+    /// ETag / Last-Modified change every N requests (resume validation).
+    pub etag_change_every: Option<u64>,
+    /// ETag style: `weak` (W/"…"), `per-request` (a new strong ETag on every answer, same file,
+    /// same Last-Modified — CDN nodes), `none`. Default: one strong ETag.
+    pub etag: Option<String>,
+    /// The server (of a file host's several) whose copy is served: its own ETag and a
+    /// Last-Modified N × 12 s later, the same bytes (Rapidgator's servers).
+    pub node: Option<u64>,
+    /// Delay before sending response headers, ms.
+    pub latency_ms: Option<u64>,
+    /// Delay before answering a request that asks for a range, ms (on top of `latency_ms`): the
+    /// probe's plain GET runs ahead of the range attempts, as on a busy machine.
+    pub range_latency_ms: Option<u64>,
+    /// Per-response speed cap for the answers to requests that ask for a range (instead of
+    /// `rate`): a range attempt a server without ranges answers in full can't fill the sockets
+    /// of a busy machine before the client drops it.
+    #[serde(deserialize_with = "size_opt")]
+    pub range_rate: Option<u64>,
+    /// 403 unless the request's `Cookie` holds this pair (`sid=1`), or a cookie of this name
+    /// (`sid`): a file behind a session.
+    pub require_cookie: Option<String>,
+    /// 403 unless the request's `Referer` starts with this (hotlink protection).
+    pub require_referer: Option<String>,
+    /// 403 when the request's `User-Agent` contains this (a bot check that refuses a
+    /// browser's User-Agent on a connection that isn't a browser's, #372).
+    pub refuse_agent: Option<String>,
+    /// Every file request answered with this status (4xx or 5xx) before any byte: a site that
+    /// turns away whatever isn't a browser (FileHippo's 412, #630), or a link the browser
+    /// already spent.
+    pub refuse: Option<u16>,
+    /// A bot check that lets only browsers through (#668): 403 with Cloudflare's
+    /// `cf-mitigated: challenge` and a challenge page to every file request that doesn't carry
+    /// the headers every current browser sends with a navigation (`Sec-Fetch-Mode`).
+    #[serde(deserialize_with = "flag_opt")]
+    pub browser_only: Option<bool>,
+    /// A bot check that refuses whatever claims to be a browser (a `User-Agent` with
+    /// `Mozilla/`), on any connection, the browser-like one too, and lets programs that say
+    /// what they are through (SourceForge's, #1422): 403 with Cloudflare's
+    /// `cf-mitigated: challenge` and a challenge page, as `browser_only`'s.
+    #[serde(deserialize_with = "flag_opt")]
+    pub refuse_browsers: Option<bool>,
+    /// A bot check whose challenge a browser passes by running its script (Cloudflare's "Just a
+    /// moment...", #1494): every file request without the cookie [`CLEARANCE`] gets 403 with
+    /// `cf-mitigated: challenge` and a page whose script, after this many milliseconds, sets
+    /// that cookie and loads the address again; with it, the file. A program that runs no
+    /// script never gets past it on its own.
+    pub js_challenge: Option<u64>,
+    /// The same check answering this status instead, empty, with `Retry-After: 0` (FileHippo's
+    /// 412 to whatever isn't a browser, #630, #668).
+    pub refuse_programs: Option<u16>,
+    /// Every request that asks for a range answered with this status (4xx or 5xx), the whole
+    /// file still served: a site that lets the browser-like connection download a file, but
+    /// not in parts (#668).
+    pub refuse_ranges: Option<u16>,
+    /// A one-time link: the first request for this path and query is served, every later one
+    /// (HEAD and ranges included) gets 410 Gone.
+    #[serde(deserialize_with = "flag_opt")]
+    pub once: Option<bool>,
+    /// Never send the file's byte at this offset: a response that reaches it stops there and
+    /// waits until the server's faults no longer say so ([`crate::LabServer::set_faults`]; a
+    /// URL's own value is never lifted). A download can't finish meanwhile, only be stopped.
+    #[serde(deserialize_with = "size_opt")]
+    pub stall_at: Option<u64>,
+}
+
+impl Faults {
+    pub fn parse(query: &str) -> Result<Self, serde_urlencoded::de::Error> {
+        serde_urlencoded::from_str(query)
+    }
+
+    /// `self` with every field that `over` sets replaced.
+    pub fn overridden_by(&self, over: &Faults) -> Faults {
+        Faults {
+            rate: over.rate.or(self.rate),
+            burst: over.burst.or(self.burst),
+            link_rate: over.link_rate.or(self.link_rate),
+            slow_every: over.slow_every.or(self.slow_every),
+            slow_rate: over.slow_rate.or(self.slow_rate),
+            max_conns: over.max_conns.or(self.max_conns),
+            drop_after: over.drop_after.or(self.drop_after),
+            drop_every: over.drop_every.or(self.drop_every),
+            fail_every: over.fail_every.or(self.fail_every),
+            fail_first: over.fail_first.or(self.fail_first),
+            no_range: over.no_range.or(self.no_range),
+            no_range_every: over.no_range_every.or(self.no_range_every),
+            html: over.html.or(self.html),
+            html_type: over.html_type.clone().or(self.html_type.clone()),
+            html_cd: over.html_cd.or(self.html_cd),
+            html_after: over.html_after.or(self.html_after),
+            html_body: over.html_body.clone().or(self.html_body.clone()),
+            html_chunked: over.html_chunked.or(self.html_chunked),
+            etag_change_every: over.etag_change_every.or(self.etag_change_every),
+            etag: over.etag.clone().or(self.etag.clone()),
+            node: over.node.or(self.node),
+            latency_ms: over.latency_ms.or(self.latency_ms),
+            range_latency_ms: over.range_latency_ms.or(self.range_latency_ms),
+            range_rate: over.range_rate.or(self.range_rate),
+            require_cookie: over.require_cookie.clone().or(self.require_cookie.clone()),
+            refuse_agent: over.refuse_agent.clone().or(self.refuse_agent.clone()),
+            refuse: over.refuse.or(self.refuse),
+            browser_only: over.browser_only.or(self.browser_only),
+            refuse_browsers: over.refuse_browsers.or(self.refuse_browsers),
+            js_challenge: over.js_challenge.or(self.js_challenge),
+            refuse_programs: over.refuse_programs.or(self.refuse_programs),
+            refuse_ranges: over.refuse_ranges.or(self.refuse_ranges),
+            require_referer: over
+                .require_referer
+                .clone()
+                .or(self.require_referer.clone()),
+            once: over.once.or(self.once),
+            stall_at: over.stall_at.or(self.stall_at),
+        }
+    }
+}
+
+/// True when request number `n` (1-based) is selected by "every Nth".
+pub fn every(n: u64, nth: Option<u64>) -> bool {
+    matches!(nth, Some(k) if k > 0 && n.is_multiple_of(k))
+}
+
+fn size_opt<'de, D: Deserializer<'de>>(d: D) -> Result<Option<u64>, D::Error> {
+    let s = String::deserialize(d)?;
+    crate::content::parse_size(&s)
+        .map(Some)
+        .ok_or_else(|| serde::de::Error::custom(format!("invalid size `{s}`")))
+}
+
+/// `true`/`1`/`yes` or `false`/`0`/`no`.
+fn flag_opt<'de, D: Deserializer<'de>>(d: D) -> Result<Option<bool>, D::Error> {
+    let s = String::deserialize(d)?;
+    parse_flag(&s)
+        .map(Some)
+        .ok_or_else(|| serde::de::Error::custom(format!("invalid flag `{s}` (1 or 0)")))
+}
+
+pub(crate) fn parse_flag(s: &str) -> Option<bool> {
+    match s {
+        "1" | "true" | "yes" => Some(true),
+        "0" | "false" | "no" => Some(false),
+        _ => None,
+    }
+}
+
+/// The cookie `js_challenge`'s script sets, and lets through.
+pub const CLEARANCE: &str = "ndm_lab_clearance=1";
+
+/// `js_challenge`'s page: after `wait_ms`, its script sets [`CLEARANCE`] and loads the page's
+/// address again, as Cloudflare's challenge page does once its check is passed.
+pub fn challenge_page(wait_ms: u64) -> String {
+    format!(
+        "<!DOCTYPE html><html><head><title>Just a moment...</title></head>\n\
+         <body><p>Checking your browser before you go on.</p>\n\
+         <script>setTimeout(function () {{ document.cookie = \"{CLEARANCE}; path=/\"; \
+         location.reload(); }}, {wait_ms});</script></body></html>\n"
+    )
+}
+
+/// True when the `Cookie` header `cookie` satisfies `require_cookie` (`name=value` or `name`).
+pub fn has_cookie(cookie: Option<&str>, want: &str) -> bool {
+    let (name, value) = match want.split_once('=') {
+        Some((n, v)) => (n.trim(), Some(v.trim())),
+        None => (want.trim(), None),
+    };
+    cookie.unwrap_or("").split(';').any(|pair| {
+        let (n, v) = pair.split_once('=').unwrap_or((pair, ""));
+        n.trim() == name && value.is_none_or(|want| v.trim() == want)
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_and_override() {
+        let base = Faults::parse("rate=1M&max_conns=2").unwrap();
+        assert_eq!(base.rate, Some(1 << 20));
+        assert_eq!(base.max_conns, Some(2));
+        let over = Faults::parse("max_conns=4&no_range=true").unwrap();
+        let f = base.overridden_by(&over);
+        assert_eq!(f.rate, Some(1 << 20));
+        assert_eq!(f.max_conns, Some(4));
+        assert_eq!(f.no_range, Some(true));
+    }
+
+    #[test]
+    fn rejects_unknown_and_bad_sizes() {
+        assert!(Faults::parse("speed=1").is_err());
+        assert!(Faults::parse("rate=fast").is_err());
+    }
+
+    #[test]
+    fn flags_and_refusals() {
+        let f = Faults::parse(
+            "once=1&html=0&no_range=true&require_cookie=sid=1&browser_only=1&refuse_browsers=1",
+        )
+        .unwrap();
+        let page = Faults::parse("html_type=none&html_cd=1&html_after=2").unwrap();
+        let stub = Faults::parse("html_body=json&html_chunked=1").unwrap();
+        assert_eq!(stub.html_body.as_deref(), Some("json"));
+        assert_eq!(stub.html_chunked, Some(true));
+        assert_eq!(page.html_type.as_deref(), Some("none"));
+        assert_eq!(page.html_cd, Some(true));
+        assert_eq!(page.html_after, Some(2));
+        assert_eq!(f.once, Some(true));
+        assert_eq!(f.browser_only, Some(true));
+        assert_eq!(f.refuse_browsers, Some(true));
+        assert_eq!(f.html, Some(false));
+        assert_eq!(f.no_range, Some(true));
+        assert_eq!(f.require_cookie.as_deref(), Some("sid=1"));
+        assert!(Faults::parse("once=maybe").is_err());
+        assert!(has_cookie(Some("a=2; sid=1"), "sid=1"));
+        assert!(has_cookie(Some("sid=7"), "sid"));
+        assert!(!has_cookie(Some("sid=11"), "sid=1"));
+        assert!(!has_cookie(Some("xsid=1"), "sid=1"));
+        assert!(!has_cookie(None, "sid"));
+        let js = Faults::parse("js_challenge=2500").unwrap();
+        assert_eq!(js.js_challenge, Some(2500));
+        assert!(challenge_page(2500).contains("2500"));
+        assert!(challenge_page(0).contains(CLEARANCE));
+    }
+
+    #[test]
+    fn every_nth() {
+        assert!(every(4, Some(2)));
+        assert!(!every(3, Some(2)));
+        assert!(!every(3, None));
+        assert!(!every(3, Some(0)));
+    }
+}

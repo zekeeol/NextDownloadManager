@@ -1,0 +1,347 @@
+{
+  "name": {
+    "message": "Next Download Manager"
+  },
+  "description": {
+    "message": "ব্রাউজার থেকে Next Download Manager-এ ডাউনলোড হস্তান্তর করে।"
+  },
+  "menu": {
+    "message": "Next Download Manager দিয়ে ডাউনলোড করুন"
+  },
+  "video_download": {
+    "message": "ভিডিও ডাউনলোড করুন"
+  },
+  "video_more": {
+    "message": "আরও বিকল্প"
+  },
+  "video_hide_here": {
+    "message": "শুধু এই ভিডিওতে লুকান"
+  },
+  "video_never_site": {
+    "message": "$site$-এ আর কখনও নয়",
+    "placeholders": {
+      "site": {
+        "content": "$1",
+        "example": "example.com"
+      }
+    }
+  },
+  "video_settings": {
+    "message": "বোতামের সেটিংস..."
+  },
+  "video_sent": {
+    "message": "Next Download Manager-এ পাঠানো হয়েছে"
+  },
+  "menu_selected": {
+    "message": "Next Download Manager দিয়ে নির্বাচিত লিংকগুলো ডাউনলোড করুন"
+  },
+  "menu_all": {
+    "message": "Next Download Manager দিয়ে সব লিংক ডাউনলোড করুন"
+  },
+  "status_connected": {
+    "message": "Next Download Manager-এর সাথে সংযুক্ত"
+  },
+  "status_connected_version": {
+    "message": "Next Download Manager $version$-এর সাথে সংযুক্ত",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.2.5"
+      }
+    }
+  },
+  "status_paused": {
+    "message": "বিরত আছে: ডাউনলোডগুলো ব্রাউজারের সাথে থাকে"
+  },
+  "status_not_installed": {
+    "message": "Next Download Manager ইনস্টল করা নেই, অথবা এর ব্রাউজার ইন্টিগ্রেশন সেট আপ করা নেই"
+  },
+  "status_forbidden": {
+    "message": "Next Download Manager এক্সটেনশনের এই কপি গ্রহণ করে না"
+  },
+  "status_not_running": {
+    "message": "Next Download Manager সময়মতো চালু হয়নি"
+  },
+  "status_host_failed": {
+    "message": "Next Download Manager-এর সঙ্গে সংযোগ ব্যর্থ হয়েছে"
+  },
+  "status_too_large": {
+    "message": "এই ডাউনলোডের বিস্তারিত হস্তান্তর করার জন্য খুব বড় ছিল"
+  },
+  "status_update_app": {
+    "message": "এই এক্সটেনশনের সব সুবিধা ব্যবহার করতে Next Download Manager আপডেট করুন"
+  },
+  "popup_take": {
+    "message": "এই ব্রাউজার থেকে ডাউনলোড নিন"
+  },
+  "popup_proxy": {
+    "message": "এই ব্রাউজারের প্রক্সি বা VPN এক্সটেনশনের মাধ্যমে ডাউনলোড পাঠান"
+  },
+  "popup_proxy_title": {
+    "message": "Next Download Manager তারপর এই ব্রাউজারের মতো একই প্রক্সির মাধ্যমে ডাউনলোড করে। ব্রাউজার আপনাকে একবার এটি অনুমতি দিতে বলবে; এটি বন্ধ করলে সেই অনুমতি বাতিল হয়ে যাবে।"
+  },
+  "popup_proxy_title_chromium": {
+    "message": "Next Download Manager এই ব্রাউজারের মতো একই প্রক্সির মাধ্যমে ডাউনলোড করে। এটি বন্ধ থাকলে, এক্সটেনশনটি ব্রাউজারের প্রক্সি পড়ে না।"
+  },
+  "popup_exclude_site": {
+    "message": "$site$ থেকে আর ডাউনলোড নেবেন না",
+    "placeholders": {
+      "site": {
+        "content": "$1",
+        "example": "example.com"
+      }
+    }
+  },
+  "popup_undo": {
+    "message": "পূর্বাবস্থায় ফিরিয়ে আনুন"
+  },
+  "popup_excluded": {
+    "message": "$site$ থেকে ডাউনলোড ব্রাউজারেই হয়",
+    "placeholders": {
+      "site": {
+        "content": "$1",
+        "example": "example.com"
+      }
+    }
+  },
+  "popup_open": {
+    "message": "Next Download Manager খুলুন"
+  },
+  "popup_options": {
+    "message": "বিকল্প..."
+  },
+  "popup_help": {
+    "message": "সহায়তা"
+  },
+  "popup_support": {
+    "message": "NDM-কে সহায়তা করুন"
+  },
+  "popup_fix": {
+    "message": "কীভাবে ঠিক করবেন"
+  },
+  "popup_declined": {
+    "message": "ব্রাউজারে ছেড়ে দেওয়া হয়েছে: $name$",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "setup.png"
+      }
+    }
+  },
+  "popup_declined_unnamed": {
+    "message": "শেষ ডাউনলোডটি ব্রাউজারে ছেড়ে দেওয়া হয়েছিল।"
+  },
+  "declined_file_type": {
+    "message": "এর প্রকার বিকল্প → ফাইলের ধরনে নেই৷"
+  },
+  "declined_site": {
+    "message": "এর সাইট বিকল্প → ফাইলের ধরনে, ব্রাউজারে ছেড়ে দেওয়া সাইটগুলোতে রয়েছে৷"
+  },
+  "declined_address": {
+    "message": "এর ঠিকানা বিকল্প → ফাইলের ধরনে, ব্রাউজারে ছেড়ে দেওয়া ঠিকানাগুলোতে রয়েছে৷"
+  },
+  "declined_small": {
+    "message": "এটি বিকল্প → ফাইলের ধরনে ন্যূনতম আকারের চেয়ে ছোট৷"
+  },
+  "declined_browser": {
+    "message": "এই ব্রাউজারটি বিকল্প → সাধারণে টিক দেওয়া নেই।"
+  },
+  "declined_integration_off": {
+    "message": "বিকল্প → সাধারণে উন্নত ব্রাউজার ইন্টিগ্রেশন ব্যবহার করুন বন্ধ আছে।"
+  },
+  "declined_torrents": {
+    "message": "এটি একটি টরেন্ট, এবং টরেন্ট সেটিংসে “Next Download Manager দিয়ে ম্যাগনেট লিংক ও .torrent ফাইল খুলুন” বন্ধ আছে।"
+  },
+  "declined_site_access": {
+    "message": "এই সাইটটি পড়ার অনুমতি এক্সটেনশনের নেই (ব্রাউজারের সাইট অ্যাক্সেস)।"
+  },
+  "popup_alt": {
+    "message": "ব্রাউজারকে ডাউনলোড করতে দিতে একটি লিংকে ক্লিক করার সময় Alt ধরে রাখুন।"
+  },
+  "popup_media": {
+    "message": "এই পেজের মিডিয়া"
+  },
+  "popup_media_none": {
+    "message": "এই পেজে এখনো কোনো ভিডিও বা অডিও পাওয়া যায়নি। এটি চালান, তারপর এটি আবার খুলুন।"
+  },
+  "popup_media_streamed": {
+    "message": "এই পেজের প্লেয়ার ভিডিওটি খণ্ড খণ্ড করে স্ট্রিম করে, তাই তালিকায় দেখানোর মতো কোনো ফাইল নেই। ভিডিওর উপর পয়েন্টার রেখে এর «ভিডিও ডাউনলোড করুন» বোতামটি ব্যবহার করুন।"
+  },
+  "popup_media_store": {
+    "message": "Chrome Web Store-এর নিয়মের কারণে অ্যাড-অনের এই কপি এই সাইটের ভিডিও থেকে দূরে থাকে। কী করতে পারেন তা «সহায়তা»-য় বলা আছে।"
+  },
+  "popup_media_download": {
+    "message": "ডাউনলোড করুন"
+  },
+  "popup_media_protected": {
+    "message": "সুরক্ষিত"
+  },
+  "popup_media_live": {
+    "message": "লাইভ"
+  },
+  "video_off": {
+    "message": "এই সাইটে বন্ধ"
+  },
+  "video_drm": {
+    "message": "সুরক্ষিত ভিডিও"
+  },
+  "video_unnamed": {
+    "message": "এটি কোন ভিডিও তা বোঝা যাচ্ছে না: ভিডিওটির নিজের পেজ খুলে সেখানে চেষ্টা করুন"
+  },
+  "video_looking": {
+    "message": "কোয়ালিটি খোঁজা হচ্ছে…"
+  },
+  "video_no_choices": {
+    "message": "এখানে ডাউনলোড করার মতো কোনো ভিডিও নেই"
+  },
+  "video_playlist": {
+    "message": "ভিডিওর তালিকা: Next Download Manager-এ বেছে নিন"
+  },
+  "video_no_ytdlp": {
+    "message": "এই ভিডিওর জন্য Next Download Manager-এর yt-dlp দরকার"
+  },
+  "video_too_long": {
+    "message": "খুঁজতে অনেক বেশি সময় লেগেছে"
+  },
+  "video_busy": {
+    "message": "Next Download Manager অন্য ভিডিওর কাজে ব্যস্ত"
+  },
+  "video_queued": {
+    "message": "সারিতে যোগ করা হয়েছে"
+  },
+  "video_failed_lookup": {
+    "message": "খোঁজা যায়নি"
+  },
+  "video_tab_video": {
+    "message": "ভিডিও"
+  },
+  "video_tab_audio": {
+    "message": "অডিও"
+  },
+  "video_open_post": {
+    "message": "ডাউনলোড করতে পোস্টটি খুলুন"
+  },
+  "popup_send_to": {
+    "message": "ডাউনলোডগুলো এখানে পাঠান"
+  },
+  "popup_send_here": {
+    "message": "এই কম্পিউটার"
+  },
+  "popup_send_remote": {
+    "message": "অন্য একটি Next Download Manager (একটি সার্ভার)"
+  },
+  "popup_remote_code": {
+    "message": "পেয়ারিং কোড"
+  },
+  "popup_remote_open": {
+    "message": "এটি খুলুন"
+  },
+  "popup_remote_pair": {
+    "message": "পেয়ার করুন"
+  },
+  "popup_remote_help": {
+    "message": "এর ঠিকানা একবার খুলুন এবং এর সার্টিফিকেট গ্রহণ করুন, তারপর এর বিকল্প, রিমোট, পেয়ার এ ডিভাইস (অথবা nextdownloadmanager-cli pair) থেকে একটি কোড লিখুন।"
+  },
+  "status_remote": {
+    "message": "ডাউনলোডগুলো $address$-এ যায়",
+    "placeholders": {
+      "address": {
+        "content": "$1",
+        "example": "https://192.168.1.10:8463/"
+      }
+    }
+  },
+  "remote_address": {
+    "message": "এর https:// ঠিকানা লিখুন।"
+  },
+  "remote_unreachable": {
+    "message": "পৌঁছানো যায়নি। এই ব্রাউজারে একবার এর ঠিকানা খুলুন এবং এর সার্টিফিকেট গ্রহণ করুন, তারপর আবার চেষ্টা করুন।"
+  },
+  "remote_wrong_code": {
+    "message": "ভুল কোড।"
+  },
+  "remote_no_code": {
+    "message": "এটি এখন কোনো কোড দেখাচ্ছে না: প্রথমে সেখানে একটি ডিভাইস পেয়ার করুন-এ ক্লিক করুন।"
+  },
+  "remote_too_soon": {
+    "message": "এক মুহূর্ত অপেক্ষা করুন, তারপর আবার চেষ্টা করুন।"
+  },
+  "remote_failed": {
+    "message": "এটি কাজ করেনি। আবার চেষ্টা করুন।"
+  },
+  "remote_device_name": {
+    "message": "ব্রাউজার এক্সটেনশন"
+  },
+  "popup_media_title_name": {
+    "message": "মিডিয়া ফাইলের নামের আগে পেজের শিরোনাম যোগ করুন"
+  },
+  "video_cant_save": {
+    "message": "সংরক্ষণ করা যাবে না"
+  },
+  "video_open_post_button": {
+    "message": "পোস্ট খুলুন"
+  },
+  "video_drag_dots": {
+    "message": "প্রান্ত বরাবর সরাতে বিন্দুগুলো টেনে আনুন"
+  },
+  "video_tip": {
+    "message": "$what$ ডাউনলোড করুন",
+    "placeholders": {
+      "what": {
+        "content": "$1",
+        "example": "1080p MP4 · 412 MB"
+      }
+    }
+  },
+  "video_tip_best": {
+    "message": "সেরা মান ডাউনলোড করুন"
+  },
+  "video_sending": {
+    "message": "NDM-এ পাঠানো হচ্ছে..."
+  },
+  "video_added": {
+    "message": "NDM-এ যোগ করা হয়েছে"
+  },
+  "video_show": {
+    "message": "দেখান"
+  },
+  "video_no_answer": {
+    "message": "NDM সাড়া দেয়নি"
+  },
+  "video_get_mdm": {
+    "message": "NDM পান"
+  },
+  "video_retry": {
+    "message": "পুনরায় চেষ্টা করুন"
+  },
+  "video_turn_on": {
+    "message": "চালু করুন"
+  },
+  "video_best": {
+    "message": "সেরা"
+  },
+  "video_all_qualities": {
+    "message": "সব গুণমান এবং সাবটাইটেল..."
+  },
+  "video_failed": {
+    "message": "Next Download Manager ইনস্টল করা নেই বা চালু হয়নি"
+  },
+  "video_download_best": {
+    "message": "সেরাটি ডাউনলোড করুন"
+  },
+  "video_original": {
+    "message": "আসল"
+  },
+  "video_compatible": {
+    "message": "সর্বাধিক সামঞ্জস্যপূর্ণ"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "পূর্ণ স্ক্রিনে ডাউনলোড বাটন লুকান"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "পেজ পূর্ণ স্ক্রিনে থাকা অবস্থায়, এর ভিডিওগুলোতে কোনো ডাউনলোড ভিডিও বাটন দেখাবে না"
+  },
+  "popup_remote_forget": {
+    "message": "ভুলে যান"
+  }
+}

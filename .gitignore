@@ -1,0 +1,27 @@
+# Build output
+/target/
+
+# Local, untracked study material (vendor docs extracted for reading)
+/.study/
+
+# Editor / OS
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+.DS_Store
+__pycache__/
+
+node_modules/
+
+# Local configuration and automation metadata excluded from the published source.
+/.cargo/
+/.claude/
+/.clusterfuzzlite/
+/.github/
+/.impeccable/
+/.well-known/
+**/.impeccable/
+
+# Keys (API keys, signing keys): never committed.
+/k/

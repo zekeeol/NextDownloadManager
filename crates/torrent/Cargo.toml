@@ -1,0 +1,39 @@
+[package]
+name = "ndm-torrent"
+description = "BitTorrent and magnet downloads for Next Download Manager (librqbit, D-014)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+futures.workspace = true
+# 9.1.0 and later: upstream's robustness fixes for what peers send.
+librqbit = { git = "https://github.com/anefzaoui/rqbit.git", rev = "c99ca4b4602e586437912bc9adecbe1111f1ee25", default-features = false, features = ["rust-tls"] }
+# Binding as librqbit's listener does, to find a port free for TCP and uTP alike (lib.rs,
+# `port_for_both`); already in the tree through librqbit.
+librqbit-dualstack-sockets = "0.7.0"
+# The TLS setup of the session's HTTP clients (trackers, UPnP), NDM's own: a system without CA
+# certificates still starts a session (ndm_engine::tls).
+ndm-engine.workspace = true
+flate2.workspace = true
+reqwest.workspace = true
+# Reading librqbit's saved session (session.json) before it starts (lib.rs).
+serde_json.workspace = true
+thiserror.workspace = true
+# NDM's log: where the session listens (lib.rs).
+tracing.workspace = true
+tokio.workspace = true
+# The blocklist file's URL, and trackers' hosts (lib.rs, trackers.rs).
+url.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+# The probe example's logs (RUST_LOG).
+tracing-subscriber.workspace = true
+
+[lints]
+workspace = true

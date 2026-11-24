@@ -1,0 +1,124 @@
+# Link grabber and archives
+
+[← Back to docs index](README.md)
+
+**Link grabber** gathers many links at once, sorts them into packages, and lets you tick the ones to download. NDM can then extract the archives it downloaded (zip, 7z, rar and more), by itself or when you ask.
+
+![Link grabber](images/grabber.webp)
+
+## Where links come from
+
+- **The browser.** Right-click a page for **Download all links with Next Download Manager**, or select part of it for **Download selected links with Next Download Manager**. The page's referrer and cookies go with each link.
+- **Tasks → Import → From text file** and **From IDM export file**. An `.ef2` file brings each download's referrer and cookies.
+- Several links, or a `.txt` or `.ef2` list, dropped on the download list.
+- **The clipboard.** **Tasks → Add batch download from clipboard** (**Ctrl+B**, also in the tray icon's menu) reads the copied text when you choose it and lists every download link in it: `http`, `https`, `ftp` and magnet links, in a list, a forum post, Markdown or HTML, each once.
+- **Pasting.** Choose **Tasks → Link grabber...** and press **Ctrl+V**: every download link in the copied text is added.
+- **A web page's address.** Paste or copy the address of a page (`https://example.com/downloads`) and NDM reads the page and lists the links on it, as the browser's **Download all links** does, in a package named after the page. The page itself is left unticked. This works for addresses that came on their own (pasted, copied, typed, in a list), not for the links found on a page, so NDM never wanders off through a site. NDM reads only what the page itself holds: links a page's scripts add after it loads come only through the browser.
+- **Click'n'Load** buttons on link sites, once you turn it on. See [Click'n'Load](#clicknload).
+
+A magnet link shows as **Magnet link** and isn't looked up: once you click **Start** or **Add to queue**, NDM finds the torrent's files and adds it with all of them, in the package's folder (or the **Torrents** folder when the package has none).
+
+Links that come while the window is open join the ones already there. A link that is already in the window isn't added twice. A link that is already in your download list goes under **Already in the list**, unticked.
+
+## Packages
+
+Each package is a row you can open and close (click its arrow, double-click it, or press **Right** and **Left**). Ticking a package ticks all its links; its box is half-filled when only some are ticked.
+
+- **The volumes of one archive** (`movie.part1.rar`, `movie.part2.rar`…, or `backup.7z.001`, `backup.7z.002`…) form one package named after the archive, as long as they come from the same site.
+- **The other links of one page** form a package named after the page.
+- **Everything else** goes into **Various files**.
+- **Links a site packed** (Click'n'Load) keep the site's packages and names, with their archive password when the site gave one.
+
+## Click'n'Load
+
+Many link sites have a **Click'n'Load** button that sends their links straight to a download manager on your computer, as JDownloader's documentation for web sites describes. Turn it on in **Options → Archives and Link grabber → Accept Click'n'Load from web pages** (off by default). NDM then listens on port 9666 of this computer only, and the links a page sends open in Link grabber, with the page's package name and archive password.
+
+Any web page can send links there, not only the link site you are on, so NDM is careful with them:
+
+- **The first time a site sends links, NDM asks**: **Allow** (that site's links go to Link grabber from now on), **Block** (they never do), or **Not now** (these links are dropped, and the site is asked again next time). The site is the one your browser names, never what the page claims. When the browser names none (a page that hides where it is, or one inside a sandboxed frame), the window says **An unknown site**: it is asked about every time, and its answer is never kept. Turning Click'n'Load off forgets the answers.
+- **Links a page sent aren't looked up**: Link grabber shows them as **Not looked up**, and no request leaves for them, with or without your Sites Logins or debrid accounts, until you add them to the queue. Nothing is downloaded before that.
+- **Links to this computer or your network are left out**: a link to `localhost`, to a private or link-local address (`192.168.…`, `10.…`, `172.16.…`, `169.254.…`, their IPv6 kin), or to a name without a dot or under `.local`, `.lan` or `.internal` never reaches Link grabber. A link site's files aren't there, and such an address could be your router or another device. NDM judges the address as written: a public-looking name that points into your network isn't recognized, so look at a package before you add it.
+- **Limits**: at most 10 posts a minute from one site, 500 links and 256 KB a post; more is refused, and one site's posts don't use up another's. At most 20 posts wait for an answer. A site brings NDM's window to the front at most once a minute; its links still arrive in Link grabber in between.
+- The page's own address isn't sent as the links' referrer: a page could name any.
+- **NDM doesn't say it is JDownloader.** Some sites first ask whether JDownloader is running (a script named `jdcheck.js`) and show their button only then. NDM doesn't answer that question, so such a site may say no program was found; a site that simply sends its form works.
+- Only one program can listen on port 9666. If JDownloader is running, NDM says so: close it, then turn the option off and on again.
+- A button that sends a DLC container instead of links isn't taken: reading one needs a key NDM can't use. The site's plain links, or its Click'n'Load button, are the way.
+- Some sites hide the key in a script NDM doesn't run (only the plain form the documentation shows is read): then their button reports a failure, and the site's plain links are the way.
+
+## Looking links up
+
+As links arrive, NDM asks each server about its file, as IDM's **Download all links** does. A few links are checked at a time, and only a few from any one site. Each link then shows its real name and size, and a status:
+
+- **Online**: the server has the file.
+- **Offline (404)**: it doesn't. The link is unticked.
+- **Needs a login**: the server wants a user name and password, or the page's cookies.
+- **Busy, try later**: the server asked to wait.
+
+Turn the look-ups off in **Options → Archives → Look links up when they arrive**. Some file hosts count a look-up as a download. With the look-ups off, NDM asks nothing of the network until you start, so a web page's address isn't read for its links either.
+
+**Hide web pages** (on by default) leaves out links to pages (`.html`, `.php` and the like, and any link whose look-up found a web page): they are neither shown nor downloaded.
+
+## The package box
+
+The box under the list edits the package you selected:
+
+- **Name**: the package's name, kept with its downloads.
+- **Save to**: the folder its files go to. When a package holds several kinds of files, the box says **Each file's category folder**: each file goes to its category's folder (**Options → Save to**), as Import always did.
+- **Password**: the archives' password, if they have one. It is kept in memory only and is never saved by itself: to keep one for other packages, add it to your [archive passwords](#archive-passwords).
+- **Extract when done**: ticked by itself when the package holds an archive.
+- **Delete archives after extracting**: once extracted, the archives go to the Recycle Bin (the Trash on macOS and Linux).
+
+## Adding the links
+
+- **Start** adds the ticked links to the **Main download queue** and starts the queue. It downloads as many files at once as the queue allows.
+- **Add to queue** adds them to the **Main download queue** without starting them, as IDM's import does.
+- **Cancel** closes the window and adds nothing.
+
+## Extracting archives
+
+NDM itself extracts zip archives (AES-encrypted and Deflate64 ones too), tar, tar.gz and tar.xz archives, and single `.gz` and `.xz` files.
+
+**7z and RAR archives need 7-Zip**, a free program ([7-zip.org](https://www.7-zip.org/)). NDM runs it when it is installed, for split and encrypted archives too. RAR's own extraction code can't be part of a free program like NDM, and 7-Zip extracts 7z best.
+
+**Options → Archives** says whether 7-Zip was found. Without it, a 7z or RAR archive isn't extracted, and the **7-Zip needed** window says so, with a **Get 7-Zip** button. On Linux, install your distribution's `7zip` (or `p7zip`) package: NDM finds `7zz`, `7z` or `7za` on its own.
+
+### In place, with HatchZip
+
+[HatchZip](https://hatchzip.dev) is another free extractor (MIT or Apache-2.0), optional. NDM uses its command line program, `hatchzip`, when it is on the PATH (its installers and packages put it there; the desktop app alone isn't enough):
+
+- **Options → Archives → Extract in place with HatchZip** (off by default): HatchZip removes the archive while its files come out, so a 180 GB download that unpacks to 200 GB needs a little over 200 GB, not 380 GB. It reads zip, 7z, RAR and tar archives, split ones too; single `.gz` and `.xz` files are still extracted by NDM. A solid RAR archive can't be extracted in place (HatchZip says so before it changes anything): NDM then extracts it as usual, with 7-Zip, and keeps the archive. HatchZip's own release builds read RAR; a build from crates.io doesn't.
+- Before it changes anything, HatchZip checks that the files fit and proves the password. A missing or wrong password, or too little room, changes nothing: the log says so, and the **Archive password** window asks as usual. The password goes to HatchZip through its environment, never on its command line.
+- The files go where **What an archive holds goes** says, as with any other extraction. On the way they are in a folder named `<archive>.hatchzip-out` beside the archive.
+- If it stops partway (NDM closed, the download deleted, the disk filled by something else), the files extracted so far stay in that folder and the rest is still in the archive. **Extract** continues where it stopped, even with the option off: only HatchZip can finish such an archive. NDM continues only a run it started itself (it keeps a note of it in its own data): a HatchZip progress file (`<archive>.hatchzip`) that comes with a download or a torrent starts nothing, and that archive is extracted as usual.
+- Nothing HatchZip extracted is ever deleted, those files are no longer in the archive. Entries NDM leaves out (links, names leading outside the folder) stay in that folder, and so do the files a failed move couldn't put in place (a file held open by another program); the log says where. So after an extraction in place, a link an archive held that NDM considers unsafe is still in your download folder, inside `<archive>.hatchzip-out`: it is never followed or moved, but it isn't removed either, as it is by every other extraction. Look at what is left in that folder before you open it.
+- **Then move the archives to the Recycle Bin** has nothing to move afterwards: the archive is already gone.
+- 7z and RAR archives still need 7-Zip when the option is off.
+
+An archive is extracted:
+
+- when its package says **Extract when done**,
+- when **Options → Archives → Extract archives when their download completes** is on (off by default), for any other download,
+- when you right-click a finished archive and choose **Extract**.
+
+A split archive is extracted once, when its last volume is downloaded. The files go next to the archive:
+
+- into a folder named after the archive when it holds several things at its top (or always, or never: **Options → Archives**),
+- a file that is already there is kept, and the new one is numbered: `report (1).txt`.
+
+Extracted files are marked as coming from the internet, as the archive is, so Windows still warns before running a program from it.
+
+NDM extracts safely. A name that would lead outside the folder is left out, and so is a link to somewhere else on the disk. An archive that would write far more than its size, or more than the disk has room for, stops before it fills it. When something goes wrong, nothing but the archive is left behind.
+
+The download's log (hover over it in the list) says what happened: **Extracted 12 files to …**, or why not, for example **Couldn't extract movie.7z.001: volume 3 of it is missing**. Every archive is tried without a password first. One that turns out to be encrypted is tried with its package's password, then with each of your saved passwords (**Options → Archives → Archive passwords...**), in their order, so an archive that needs no password never meets them. Only when none fits does the **Archive password** window open. Type the password and click **Extract**, or **Cancel** to leave the archive as it is. Tick **Remember it for other archives** (it starts unticked) to add it to the saved passwords. 7-Zip is given each password on its input, never on its command line, where other programs on the computer could read it.
+
+### Archive passwords
+
+**Options → Archives → Archive passwords...** keeps the passwords you use again and again (a site's own, say), one per line. The download's log says **Trying the saved archive passwords...** while NDM tries them. The one that opens an archive moves to the top of the list, so the passwords you need most are tried first. A package's password (one you typed in Link grabber, or one that came with the links) is tried first and never added to the list by itself; when it is one of your saved passwords already, it moves to the top like any other. A password typed in the **Archive password** window is added only with **Remember it for other archives** ticked, and only once it fits. The list is kept in the system's keychain, as the other passwords are (see [Where the sign-in is kept](debrid.md#where-the-sign-in-is-kept)).
+
+Each try starts the extraction again: with a long list and a large archive whose file names aren't encrypted, it can take a moment before the right one is found.
+
+## Next steps
+
+- [Adding downloads →](adding-downloads.md)
+- [Options → Archives →](options.md#archives)
+- [Browser integration →](browser-integration.md)

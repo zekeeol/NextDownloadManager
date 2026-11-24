@@ -1,0 +1,347 @@
+{
+  "name": {
+    "message": "Next Download Manager"
+  },
+  "description": {
+    "message": "将下载任务从浏览器转交给 Next Download Manager。"
+  },
+  "menu": {
+    "message": "使用 Next Download Manager 下载"
+  },
+  "video_download": {
+    "message": "下载视频"
+  },
+  "video_more": {
+    "message": "更多选项"
+  },
+  "video_hide_here": {
+    "message": "仅在此视频上隐藏"
+  },
+  "video_never_site": {
+    "message": "在 $site$ 上永不显示",
+    "placeholders": {
+      "site": {
+        "content": "$1",
+        "example": "example.com"
+      }
+    }
+  },
+  "video_settings": {
+    "message": "按钮设置..."
+  },
+  "video_sent": {
+    "message": "已发送到 Next Download Manager"
+  },
+  "menu_selected": {
+    "message": "使用 Next Download Manager 下载选定链接"
+  },
+  "menu_all": {
+    "message": "使用 Next Download Manager 下载所有链接"
+  },
+  "status_connected": {
+    "message": "已连接到 Next Download Manager"
+  },
+  "status_connected_version": {
+    "message": "已连接到 Next Download Manager $version$",
+    "placeholders": {
+      "version": {
+        "content": "$1",
+        "example": "0.2.5"
+      }
+    }
+  },
+  "status_paused": {
+    "message": "已暂停：下载任务将由浏览器处理"
+  },
+  "status_not_installed": {
+    "message": "Next Download Manager 未安装，或其浏览器集成未配置"
+  },
+  "status_forbidden": {
+    "message": "Next Download Manager 不接受此扩展副本"
+  },
+  "status_not_running": {
+    "message": "Next Download Manager 未及时启动"
+  },
+  "status_host_failed": {
+    "message": "与 Next Download Manager 的连接失败"
+  },
+  "status_too_large": {
+    "message": "此下载任务的详细信息过大，无法转交"
+  },
+  "status_update_app": {
+    "message": "更新 Next Download Manager，即可使用此扩展的全部功能"
+  },
+  "popup_take": {
+    "message": "从此浏览器接管下载任务"
+  },
+  "popup_proxy": {
+    "message": "通过此浏览器的代理或 VPN 扩展发送下载任务"
+  },
+  "popup_proxy_title": {
+    "message": "Next Download Manager 将通过与此浏览器相同的代理下载。浏览器会向您请求一次授权；关闭此开关即撤销授权。"
+  },
+  "popup_proxy_title_chromium": {
+    "message": "Next Download Manager 将通过与此浏览器相同的代理下载。关闭此开关时，扩展不会读取浏览器的代理设置。"
+  },
+  "popup_exclude_site": {
+    "message": "永不接管来自 $site$ 的下载任务",
+    "placeholders": {
+      "site": {
+        "content": "$1",
+        "example": "example.com"
+      }
+    }
+  },
+  "popup_undo": {
+    "message": "撤销"
+  },
+  "popup_excluded": {
+    "message": "来自 $site$ 的下载任务将由浏览器处理",
+    "placeholders": {
+      "site": {
+        "content": "$1",
+        "example": "example.com"
+      }
+    }
+  },
+  "popup_open": {
+    "message": "打开 Next Download Manager"
+  },
+  "popup_options": {
+    "message": "选项..."
+  },
+  "popup_help": {
+    "message": "帮助"
+  },
+  "popup_support": {
+    "message": "赞助 NDM"
+  },
+  "popup_fix": {
+    "message": "如何修复"
+  },
+  "popup_declined": {
+    "message": "已留给浏览器：$name$",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "setup.png"
+      }
+    }
+  },
+  "popup_declined_unnamed": {
+    "message": "上次下载任务已交由浏览器处理。"
+  },
+  "declined_file_type": {
+    "message": "其文件类型不在“选项”→“文件类型”列表中。"
+  },
+  "declined_site": {
+    "message": "其网站已列入“选项”→“文件类型”中留给浏览器的网站。"
+  },
+  "declined_address": {
+    "message": "其地址已列入“选项”→“文件类型”中留给浏览器的地址。"
+  },
+  "declined_small": {
+    "message": "文件小于“选项”→“文件类型”中设置的最小大小。"
+  },
+  "declined_browser": {
+    "message": "“选项”→“常规”中未勾选此浏览器。"
+  },
+  "declined_integration_off": {
+    "message": "“选项”→“常规”中已关闭“使用高级浏览器集成”。"
+  },
+  "declined_torrents": {
+    "message": "这是一个种子文件，并且“在 Torrent 设置中用 Next Download Manager 打开磁力链接和 .torrent 文件”已关闭。"
+  },
+  "declined_site_access": {
+    "message": "此扩展无权读取此网站（浏览器的网站访问权限）。"
+  },
+  "popup_alt": {
+    "message": "按住 Alt 键并单击链接，让浏览器下载。"
+  },
+  "popup_media": {
+    "message": "此页面上的媒体"
+  },
+  "popup_media_none": {
+    "message": "此页面上尚未找到视频或音频。请播放后再次打开。"
+  },
+  "popup_media_streamed": {
+    "message": "此页面的播放器分段流式传输视频，没有可列出的文件。将鼠标移到视频上，点击“下载视频”按钮。"
+  },
+  "popup_media_store": {
+    "message": "受 Chrome 应用商店规则限制，此版本扩展无法下载该网站的视频。请查看“帮助”了解解决办法。"
+  },
+  "popup_media_download": {
+    "message": "下载"
+  },
+  "popup_media_protected": {
+    "message": "受保护"
+  },
+  "popup_media_live": {
+    "message": "直播"
+  },
+  "video_off": {
+    "message": "此站点已关闭"
+  },
+  "video_drm": {
+    "message": "受保护视频"
+  },
+  "video_unnamed": {
+    "message": "无法判断这是哪个视频：请打开该视频所在页面重试"
+  },
+  "video_looking": {
+    "message": "正在查找画质…"
+  },
+  "video_no_choices": {
+    "message": "此处没有可下载的视频"
+  },
+  "video_playlist": {
+    "message": "视频列表：请在 Next Download Manager 中选择"
+  },
+  "video_no_ytdlp": {
+    "message": "Next Download Manager 需要 yt-dlp 才能下载此视频"
+  },
+  "video_too_long": {
+    "message": "查找耗时过长"
+  },
+  "video_busy": {
+    "message": "Next Download Manager 正忙于处理其他视频"
+  },
+  "video_queued": {
+    "message": "已添加到队列"
+  },
+  "video_failed_lookup": {
+    "message": "无法查找"
+  },
+  "video_tab_video": {
+    "message": "视频"
+  },
+  "video_tab_audio": {
+    "message": "音频"
+  },
+  "video_open_post": {
+    "message": "打开帖子以下载"
+  },
+  "popup_send_to": {
+    "message": "将下载任务发送到"
+  },
+  "popup_send_here": {
+    "message": "此电脑"
+  },
+  "popup_send_remote": {
+    "message": "另一个 Next Download Manager（服务器）"
+  },
+  "popup_remote_code": {
+    "message": "配对码"
+  },
+  "popup_remote_open": {
+    "message": "打开地址"
+  },
+  "popup_remote_pair": {
+    "message": "配对"
+  },
+  "popup_remote_help": {
+    "message": "请先打开其地址并接受证书，然后输入其“选项”→“远程”→“配对设备”中显示的配对码（或 nextdownloadmanager-cli pair）。"
+  },
+  "status_remote": {
+    "message": "下载任务发送到 $address$",
+    "placeholders": {
+      "address": {
+        "content": "$1",
+        "example": "https://192.168.1.10:8463/"
+      }
+    }
+  },
+  "remote_address": {
+    "message": "输入其 https:// 地址。"
+  },
+  "remote_unreachable": {
+    "message": "无法访问。请先在此浏览器中打开其地址并接受其证书，然后重试。"
+  },
+  "remote_wrong_code": {
+    "message": "配对码错误。"
+  },
+  "remote_no_code": {
+    "message": "NDM 未显示配对码：请先在 NDM 中点击“配对设备”。"
+  },
+  "remote_too_soon": {
+    "message": "请稍等片刻后重试。"
+  },
+  "remote_failed": {
+    "message": "操作失败。请重试。"
+  },
+  "remote_device_name": {
+    "message": "浏览器扩展"
+  },
+  "popup_media_title_name": {
+    "message": "在媒体文件名前加上页面标题"
+  },
+  "video_cant_save": {
+    "message": "无法保存"
+  },
+  "video_open_post_button": {
+    "message": "打开帖子"
+  },
+  "video_drag_dots": {
+    "message": "拖动圆点可沿边缘移动"
+  },
+  "video_tip": {
+    "message": "下载 $what$",
+    "placeholders": {
+      "what": {
+        "content": "$1",
+        "example": "1080p MP4 · 412 MB"
+      }
+    }
+  },
+  "video_tip_best": {
+    "message": "下载最佳画质"
+  },
+  "video_sending": {
+    "message": "正在发送到 NDM..."
+  },
+  "video_added": {
+    "message": "已添加到 NDM"
+  },
+  "video_show": {
+    "message": "显示"
+  },
+  "video_no_answer": {
+    "message": "NDM 未响应"
+  },
+  "video_get_mdm": {
+    "message": "获取 NDM"
+  },
+  "video_retry": {
+    "message": "重试"
+  },
+  "video_turn_on": {
+    "message": "启用"
+  },
+  "video_best": {
+    "message": "最佳"
+  },
+  "video_all_qualities": {
+    "message": "所有画质和字幕..."
+  },
+  "video_failed": {
+    "message": "Next Download Manager 未安装或未启动"
+  },
+  "video_download_best": {
+    "message": "下载最佳"
+  },
+  "video_original": {
+    "message": "原始"
+  },
+  "video_compatible": {
+    "message": "最兼容"
+  },
+  "popup_video_hide_fullscreen": {
+    "message": "全屏时隐藏下载按钮"
+  },
+  "popup_video_hide_fullscreen_title": {
+    "message": "页面全屏时，视频上不会显示“下载视频”按钮"
+  },
+  "popup_remote_forget": {
+    "message": "忘记"
+  }
+}

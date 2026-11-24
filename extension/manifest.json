@@ -1,0 +1,63 @@
+{
+    "manifest_version": 3,
+    "default_locale": "en",
+    "name": "__MSG_name__",
+    "version": "0.0.1",
+    "description": "__MSG_description__",
+    "homepage_url": "https://github.com/zekeeol/NextDownloadManager",
+    "minimum_chrome_version": "116",
+    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzAphbjUSt6DDLy2vfq/kLQkZBOKuiVxPLPEOM+AeHx17355tUjzAifbxnEgFcsFxSgR4Z2h7q98Raw+xleDjM48gyhcxRqmsdfjn6Gt8mzGAXjxFRYAiU8n8/W5imNhfnpVmMOx5tHIhb1x7oNjCJ0N1cnGeKysyBmje3yBFLW7sxefvnnNaXACveXo6p2+XrJtW7olVD1UmbY5ZlewEIBK2JbQ6g/BdWH33WmYYh/XTUeQR/7GKpxO9BDmaPWeiMPTLtK6eOs6LNtRuUaRHaXXpRokYOFgsKYWDs2kBDivwcI4qoGiMGJxEBwamBGZh4Aj7B4nHmLySwhRZ0fEJEQIDAQAB",
+    "permissions": [
+        "downloads",
+        "contextMenus",
+        "nativeMessaging",
+        "cookies",
+        "storage",
+        "webRequest",
+        "scripting",
+        "declarativeNetRequestWithHostAccess",
+        "proxy"
+    ],
+    "host_permissions": [
+        "<all_urls>"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "action": {
+        "default_popup": "popup.html",
+        "default_title": "__MSG_name__",
+        "default_icon": {
+            "16": "icons/icon-16.png",
+            "32": "icons/icon-32.png"
+        }
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "video.js"
+            ],
+            "all_frames": true,
+            "run_at": "document_idle"
+        },
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "page.js"
+            ],
+            "all_frames": true,
+            "run_at": "document_start"
+        }
+    ],
+    "icons": {
+        "16": "icons/icon-16.png",
+        "32": "icons/icon-32.png",
+        "48": "icons/icon-48.png",
+        "128": "icons/icon-128.png"
+    }
+}

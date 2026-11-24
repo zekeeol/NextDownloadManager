@@ -1,0 +1,31 @@
+[package]
+name = "librqbit-tracker-comms"
+version = "9.1.0"
+edition = "2024"
+description = "Patched librqbit-tracker-comms with non-zero left during magnet metadata lookup."
+license = "Apache-2.0"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+anyhow = "1"
+futures = "0.3"
+async-stream = "0.3"
+buffers = { package = "librqbit-buffers", git = "https://github.com/anefzaoui/rqbit.git", rev = "c99ca4b4602e586437912bc9adecbe1111f1ee25" }
+librqbit-core = { git = "https://github.com/anefzaoui/rqbit.git", rev = "c99ca4b4602e586437912bc9adecbe1111f1ee25", default-features = false }
+byteorder = "1"
+serde = "1"
+serde_derive = "1"
+urlencoding = "2"
+rand = "0.10"
+tracing = "0.1"
+reqwest = { version = "0.13", default-features = false, features = ["json"] }
+bencode = { package = "librqbit-bencode", git = "https://github.com/anefzaoui/rqbit.git", rev = "c99ca4b4602e586437912bc9adecbe1111f1ee25" }
+url = "2"
+parking_lot = "0.12"
+tokio-util = "0.7"
+librqbit-dualstack-sockets = "0.7"
+backon = "1.5"
+itertools = "0.15"
+serde_with = "3"
+
+[workspace]
