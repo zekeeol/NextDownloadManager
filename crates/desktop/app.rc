@@ -1,0 +1,2 @@
+// GPUI loads this resource for the native window icon.
+1 ICON "assets\\app-icon.ico"

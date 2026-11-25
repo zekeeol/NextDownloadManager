@@ -1,11 +1,26 @@
 //! GPUI is the default desktop. Existing CLI and headless entry points use the download service.
+#![cfg_attr(windows, windows_subsystem = "windows")]
+
 extern crate gpui_kit as gpui;
 mod app_icon;
 mod bridge;
 mod shell;
 mod theme;
+use gpui_kit::component::TitleBar;
 use gpui_kit::*;
 gpui_kit::actions!(ndm, [Quit]);
+
+#[cfg(windows)]
+fn attach_parent_console() -> bool {
+    use windows_sys::Win32::System::Console::{ATTACH_PARENT_PROCESS, AttachConsole, GetConsoleCP};
+
+    // SAFETY: These APIs take no pointers. The flag selects the existing parent console.
+    #[allow(unsafe_code)]
+    unsafe {
+        GetConsoleCP() != 0 || AttachConsole(ATTACH_PARENT_PROCESS) != 0
+    }
+}
+
 fn main() {
     let args: Vec<_> = std::env::args_os().skip(1).collect();
     if args.iter().any(|a| {
@@ -26,7 +41,15 @@ fn main() {
         }
         #[cfg(not(unix))]
         {
-            let code = std::process::Command::new(bridge::backend())
+            #[cfg(windows)]
+            let mut command = if attach_parent_console() {
+                std::process::Command::new(bridge::backend())
+            } else {
+                bridge::quiet_command(bridge::backend())
+            };
+            #[cfg(not(windows))]
+            let mut command = std::process::Command::new(bridge::backend());
+            let code = command
                 .args(args)
                 .status()
                 .ok()
@@ -81,7 +104,7 @@ fn main() {
                         h.parse::<f32>().ok()?.clamp(600., 1400.),
                     ))
                 })
-                .unwrap_or((1200., 800.));
+                .unwrap_or((1280., 800.));
             let options = WindowOptions {
                 window_bounds: Some(WindowBounds::Windowed(Bounds::centered(
                     None,
@@ -89,13 +112,13 @@ fn main() {
                     cx,
                 ))),
                 window_min_size: Some(size(px(900.), px(600.))),
-                window_background: WindowBackgroundAppearance::Blurred,
+                window_background: WindowBackgroundAppearance::Opaque,
                 titlebar: Some(TitlebarOptions {
                     title: Some("Next Download Manager".into()),
-                    appears_transparent: true,
-                    traffic_light_position: Some(point(px(18.), px(19.))),
+                    traffic_light_position: Some(point(px(14.), px(14.))),
+                    ..TitleBar::title_bar_options()
                 }),
-                ..Default::default()
+                ..TitleBar::window_options()
             };
             let (_, view) = open_window(options, cx, |window, cx| {
                 cx.new(|cx| shell::Shell::new(window, cx))

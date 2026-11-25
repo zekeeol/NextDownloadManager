@@ -5770,6 +5770,7 @@ name = "ndm-app"
 version = "0.0.1"
 dependencies = [
  "dirs 7.0.0",
+ "embed-resource",
  "gpui-kit",
  "ndm-ipc",
  "objc2 0.6.5",
@@ -5780,6 +5781,7 @@ dependencies = [
  "serde",
  "serde_json",
  "url",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

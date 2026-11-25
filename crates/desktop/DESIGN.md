@@ -1,133 +1,17 @@
----
-name: Next Download Manager Native Desktop
-description: A compact GPUI download workspace using a refined Light & Dark shadcn/ui visual language.
-colors:
-  primary: "#0284c7"
-  primary-active: "#0369a1"
-  success: "#059669"
-  warning: "#d97706"
-  danger: "#e11d48"
-  ink: "#0f172a"
-  ink-secondary: "#334155"
-  muted: "#64748b"
-  line: "#e2e8f0"
-  subtle-line: "#f1f5f9"
-  soft: "#f1f5f9"
-  chrome: "#f8fafc"
-  surface: "#ffffff"
-  accent: "#e0f2fe"
-  selected: "#f0f9ff"
-  selected-hover: "#e0f2fe"
-  dark-surface: "#0f172a"
-  dark-chrome: "#0b1120"
-  dark-sidebar: "#0d1424"
-  dark-soft: "#162033"
-  dark-ink: "#f1f5f9"
-  dark-primary: "#38bdf8"
-  dark-success: "#34d399"
-  dark-danger: "#fb7185"
-  segment-divider: "#fb7185"
-  backdrop: "#02061766"
-typography:
-  headline:
-    fontFamily: ".SystemUIFont"
-    fontSize: "17.5px"
-    fontWeight: 600
-  title:
-    fontFamily: ".SystemUIFont"
-    fontSize: "15px"
-    fontWeight: 600
-  body:
-    fontFamily: ".SystemUIFont"
-    fontSize: "13px"
-  label:
-    fontFamily: ".SystemUIFont"
-    fontSize: "12px"
-  caption:
-    fontFamily: ".SystemUIFont"
-    fontSize: "11px"
-  mono:
-    fontFamily: "Menlo"
-    fontSize: "11px"
-rounded:
-  progress: "9999px"
-  segment-track: "5px"
-  control: "7px"
-  card: "10px"
-  dialog: "14px"
-spacing:
-  tight: "4px"
-  small: "8px"
-  compact: "10px"
-  medium: "12px"
-  regular: "16px"
-  large: "20px"
-components:
-  button-primary:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.surface}"
-    rounded: "{rounded.control}"
-    height: "32px"
-    typography: "{typography.label}"
-  navigation-selected:
-    backgroundColor: "{colors.accent}"
-    textColor: "{colors.primary}"
-    rounded: "8px"
-    height: "32px"
-  download-row:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.ink}"
-    height: "68px"
-  download-row-selected:
-    backgroundColor: "{colors.selected}"
-  download-row-hover:
-    backgroundColor: "{colors.chrome}"
-  download-row-focus:
-    backgroundColor: "{colors.accent}"
-  metadata-container:
-    backgroundColor: "{colors.soft}"
-    rounded: "{rounded.card}"
-    padding: "14px"
-  progress-track:
-    backgroundColor: "{colors.line}"
-    rounded: "{rounded.progress}"
-    height: "6px"
-  dialog:
-    backgroundColor: "{colors.surface}"
-    rounded: "{rounded.dialog}"
-  input:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.control}"
----
+# Next Download Manager desktop
 
-# Design System: Next Download Manager Native Desktop
+The native GPUI workspace uses Arke's compact desktop layout as a visual reference. A neutral window frame surrounds the sidebar and the download pane. Copper marks selection and primary actions. File categories and transfer states have their own semantic colors.
 
-## Overview
+## Workspace
 
-**Creative North Star: "shadcn/ui, rendered natively in GPUI"**
+- The title bar contains search, the sidebar toggle and the appearance switch alongside the platform window controls.
+- The collapsible sidebar groups library filters, download categories, the main queue and Settings.
+- The command bar keeps adding links and torrents, transfer actions, view controls and the details toggle with the download pane.
+- List view shows size and status at every supported width. Speed and time columns appear when the list has room. Grid view shows the same filtered downloads and selection with category icons and progress.
+- The optional details pane shows the selected task's metadata and opens the full transfer dialog. Service connection, active transfers, throughput and free space appear in the bottom status bar.
 
-The desktop interface uses a crisp Light & Dark slate workspace with sky blue actions, category-tinted file tiles, pill-shaped segmented tabs, native switches, and emerald/sky transfer progress. All controls are native GPUI elements and `gpui-kit 0.8.1` components.
+## Appearance
 
-This document applies to `crates/desktop` only (`src/theme.rs`, `src/shell.rs`, `src/main.rs`).
+System, Light and Dark share the same semantic tokens in `src/theme.rs`. The system mode updates with native window appearance. Explicit preferences persist in `ui-theme.txt`. Both the workspace and GPUI Kit controls use the active palette. Dialogs use opaque surfaces, scrollable content and fixed headers and footers. Settings uses a separate navigation column.
 
-## Colors & Themes
-
-- **Frosted Glass Vibrancy & Palettes (`theme::palette`)**: The main window uses `WindowBackgroundAppearance::Blurred` in `src/main.rs` with a transparent root layout in `Shell::render` so macOS vibrancy shines through translucent `chrome`, `sidebar`, `toolbar`, `table_header`, `glass_card`, and `surface` layers, while `modal_surface` and `modal_chrome` remain crisp and opaque for floating dialogs.
-- **System / Light / Dark Theme (`theme::ThemePref`)**: Defaults to `System` (live-synced via `cx.observe_window_appearance`) and can be switched between `System`, `Light`, and `Dark` from the titlebar or Settings → General → Appearance, persisted in `<data_dir>/ui-theme.txt` and synchronized with `gpui_kit::component::ThemeMode` via `theme::apply`.
-- **Category Tints (`theme::category_tint`)**: Download rows and detail headers display 36–38px rounded category icon tiles tinted by file type (`Torrents` indigo, `Video` rose, `Music` amber, `Compressed` teal, `Documents` sky, `Programs` emerald).
-
-## Layout & Components
-
-- **Titlebar (`48px`)**: Translucent frosted bar with gradient app mark, title, `v<version>` pill badge, live aggregate speed pill when transfers are active, 3-state theme switcher (`Auto`/`Light`/`Dark`), and Settings trigger.
-- **Toolbar (`56px`)**: Primary `Add URL` and `Add torrent` controls, transfer action cluster (`Resume`, `Pause`, `Pause all`, `Remove`), and cleanable `236px` search input.
-- **Sidebar (`216px`)**: `LIBRARY` and `CATEGORIES` sections with pill count badges, plus an inset `Main queue` card at the bottom with live active status and `Start`/`Stop` actions.
-- **Download Table (`68px` rows)**: Workspace header with item count pill and quick `Open folder` / `Show details` actions; rows with left selection indicator bar, category icon tile, filename + host/progress subline, size, dot+label status with pill progress bar, colored speed indicator, and remaining time.
-- **Footer (`34px`)**: Layered service health dot, active count, aggregate download speed, and free disk space.
-- **Modal Dialogs (`14px` radius)**: `shadow_xl()` over translucent backdrop, context-tinted `52px` header, `segmented_tabs`, inset `section_card` containers, `Switch` toggles in BitTorrent settings, and a pinned `56px` action footer bar.
-
-## Do's and Don'ts
-
-- **Do** preserve keyboard navigation (`Tab`, `Space`, `Enter`, `Escape`, `Cmd-N`, `Cmd-I`, `Cmd-Q`) and accessible roles/labels.
-- **Do** route all colors through `theme::palette(dark)` so Light and Dark modes stay consistent across every region and modal.
-- **Don't** hardcode light-only `rgb(...)` backgrounds or text colors inside `shell.rs`.
+`src/shell/workspace.rs` renders the workspace. `src/shell/dialogs.rs` renders download, torrent, transfer, removal and settings dialogs. `src/shell.rs` handles the shared state and service messages.

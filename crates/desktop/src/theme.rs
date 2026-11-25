@@ -5,7 +5,7 @@ use gpui_kit::{
 };
 use std::path::PathBuf;
 
-/// User-selected appearance preference (`System` follows macOS Light/Dark mode).
+/// User-selected appearance preference (`System` follows the window appearance).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum ThemePref {
     #[default]
@@ -61,17 +61,14 @@ impl ThemePref {
     }
 }
 
-/// Cohesive semantic color palette for the native GPUI desktop workspace.
+/// Semantic colors shared by the workspace, dialogs and kit controls.
 #[derive(Clone, Copy)]
 pub struct Palette {
     pub chrome: Rgba,
-    pub sidebar: Rgba,
-    pub toolbar: Rgba,
     pub surface: Rgba,
     pub surface_elevated: Rgba,
     pub modal_surface: Rgba,
     pub modal_chrome: Rgba,
-    pub glass_card: Rgba,
     pub soft: Rgba,
     pub table_header: Rgba,
     pub row_hover: Rgba,
@@ -86,129 +83,117 @@ pub struct Palette {
     pub ink_secondary: Rgba,
     pub muted: Rgba,
     pub primary: Rgba,
-    pub primary_bright: Rgba,
-    pub primary_hover: Rgba,
+    pub action: Rgba,
+    pub action_hover: Rgba,
+    pub on_action: Rgba,
     pub accent_soft: Rgba,
     pub success: Rgba,
     pub success_soft: Rgba,
-    pub success_border: Rgba,
     pub warning: Rgba,
-    pub warning_soft: Rgba,
     pub danger: Rgba,
     pub danger_soft: Rgba,
     pub danger_border: Rgba,
-    pub notice_bg: Rgba,
-    pub notice_border: Rgba,
-    pub notice_text: Rgba,
     pub progress_track: Rgba,
     pub segment_divider: Rgba,
 }
 
-/// Returns the calibrated frosted Light or Dark semantic palette.
+pub const BAR_HEIGHT: f32 = 46.;
+pub const SIDEBAR_WIDTH: f32 = 208.;
+pub const RAIL_WIDTH: f32 = 54.;
+pub const PANE_RADIUS: f32 = 12.;
+pub const CONTROL_RADIUS: f32 = 6.;
+
 pub fn palette(dark: bool) -> Palette {
     if dark {
         Palette {
-            chrome: rgba(0x0b1120b8),
-            sidebar: rgba(0x0d1424b0),
-            toolbar: rgba(0x0f172ad2),
-            surface: rgba(0x0f172ae6),
-            surface_elevated: rgb(0x1e293b),
-            modal_surface: rgb(0x0f172a),
-            modal_chrome: rgb(0x0b1120),
-            glass_card: rgba(0x1e293bba),
-            soft: rgb(0x162033),
-            table_header: rgba(0x111a2ec4),
-            row_hover: rgba(0xf8fafc0c),
-            nav_hover: rgba(0xf8fafc12),
-            selected: rgba(0x38bdf81c),
-            selected_hover: rgba(0x38bdf828),
-            backdrop: rgba(0x00000088),
-            border: rgba(0xf8fafc1c),
-            border_subtle: rgba(0xf8fafc0f),
-            accent_border: rgb(0x075985),
-            ink: rgb(0xf1f5f9),
-            ink_secondary: rgb(0xcbd5e1),
-            muted: rgb(0x94a3b8),
-            primary: rgb(0x38bdf8),
-            primary_bright: rgb(0x7dd3fc),
-            primary_hover: rgb(0x0ea5e9),
-            accent_soft: rgb(0x0c2d48),
-            success: rgb(0x34d399),
-            success_soft: rgb(0x062d22),
-            success_border: rgb(0x065f46),
-            warning: rgb(0xfbbf24),
-            warning_soft: rgb(0x2d1f06),
-            danger: rgb(0xfb7185),
-            danger_soft: rgb(0x2d0f18),
-            danger_border: rgb(0x881337),
-            notice_bg: rgb(0x1e293b),
-            notice_border: rgb(0x334155),
-            notice_text: rgb(0xf1f5f9),
-            progress_track: rgb(0x1e293b),
-            segment_divider: rgb(0xf43f5e),
+            chrome: rgb(0x121213),
+            surface: rgb(0x19191b),
+            surface_elevated: rgb(0x303032),
+            modal_surface: rgb(0x1e1e20),
+            modal_chrome: rgb(0x222224),
+            soft: rgb(0x262628),
+            table_header: rgb(0x19191b),
+            row_hover: rgb(0x242426),
+            nav_hover: rgb(0x29292b),
+            selected: rgb(0x34261f),
+            selected_hover: rgb(0x403027),
+            backdrop: rgba(0x00000092),
+            border: rgb(0x353538),
+            border_subtle: rgb(0x2a2a2c),
+            accent_border: rgb(0x8e573b),
+            ink: rgb(0xf0eff0),
+            ink_secondary: rgb(0xc6c4c6),
+            muted: rgb(0xaaa8aa),
+            primary: rgb(0xf1a47a),
+            action: rgb(0xf1a47a),
+            action_hover: rgb(0xffb990),
+            on_action: rgb(0x29150b),
+            accent_soft: rgb(0x36271f),
+            success: rgb(0x86ce9c),
+            success_soft: rgb(0x203029),
+            warning: rgb(0xe7be7b),
+            danger: rgb(0xff9da8),
+            danger_soft: rgb(0x3a252a),
+            danger_border: rgb(0x6d3842),
+            progress_track: rgb(0x373638),
+            segment_divider: rgb(0xff9da8),
         }
     } else {
         Palette {
-            chrome: rgba(0xf8fafcb8),
-            sidebar: rgba(0xf1f5f9b0),
-            toolbar: rgba(0xffffffd4),
-            surface: rgba(0xffffffeb),
+            chrome: rgb(0xefefef),
+            surface: rgb(0xfbfbfb),
             surface_elevated: rgb(0xffffff),
-            modal_surface: rgb(0xffffff),
-            modal_chrome: rgb(0xf8fafc),
-            glass_card: rgba(0xffffffcc),
-            soft: rgb(0xf1f5f9),
-            table_header: rgba(0xf8fafcc8),
-            row_hover: rgba(0x0f172a0a),
-            nav_hover: rgba(0x0f172a0f),
-            selected: rgba(0x0284c714),
-            selected_hover: rgba(0x0284c720),
-            backdrop: rgba(0x02061766),
-            border: rgba(0x0f172a1c),
-            border_subtle: rgba(0x0f172a10),
-            accent_border: rgb(0xbae6fd),
-            ink: rgb(0x0f172a),
-            ink_secondary: rgb(0x334155),
-            muted: rgb(0x64748b),
-            primary: rgb(0x0284c7),
-            primary_bright: rgb(0x0ea5e9),
-            primary_hover: rgb(0x0369a1),
-            accent_soft: rgb(0xe0f2fe),
-            success: rgb(0x059669),
-            success_soft: rgb(0xecfdf5),
-            success_border: rgb(0xa7f3d0),
-            warning: rgb(0xd97706),
-            warning_soft: rgb(0xfffbeb),
-            danger: rgb(0xe11d48),
-            danger_soft: rgb(0xfff1f2),
-            danger_border: rgb(0xfecdd3),
-            notice_bg: rgb(0xffffff),
-            notice_border: rgb(0xe2e8f0),
-            notice_text: rgb(0x0f172a),
-            progress_track: rgb(0xe2e8f0),
-            segment_divider: rgb(0xfb7185),
+            modal_surface: rgb(0xfbfbfb),
+            modal_chrome: rgb(0xf5f5f5),
+            soft: rgb(0xededed),
+            table_header: rgb(0xfbfbfb),
+            row_hover: rgb(0xf1f1f1),
+            nav_hover: rgb(0xe2e2e2),
+            selected: rgb(0xf4e3d9),
+            selected_hover: rgb(0xf0d9cb),
+            backdrop: rgba(0x16131359),
+            border: rgb(0xd5d4d4),
+            border_subtle: rgb(0xe7e6e6),
+            accent_border: rgb(0xd59d80),
+            ink: rgb(0x232225),
+            ink_secondary: rgb(0x4a484b),
+            muted: rgb(0x69666a),
+            primary: rgb(0xa04422),
+            action: rgb(0xa04422),
+            action_hover: rgb(0x843518),
+            on_action: rgb(0xffffff),
+            accent_soft: rgb(0xf6e7df),
+            success: rgb(0x286b43),
+            success_soft: rgb(0xe5f0e8),
+            warning: rgb(0x865b20),
+            danger: rgb(0xa32e40),
+            danger_soft: rgb(0xf9e7ea),
+            danger_border: rgb(0xe4b5bd),
+            progress_track: rgb(0xe7e4e5),
+            segment_divider: rgb(0xa32e40),
         }
     }
 }
 
-/// Returns `(icon_color, tile_background)` for a download category.
+/// Returns an icon color and matching low-contrast surface for a file category.
 pub fn category_tint(category: &str, dark: bool) -> (Rgba, Rgba) {
-    match (category, dark) {
-        ("Torrents", false) => (rgb(0x6366f1), rgb(0xeef2ff)),
-        ("Torrents", true) => (rgb(0x818cf8), rgb(0x1e1b4b)),
-        ("Video", false) => (rgb(0xe11d48), rgb(0xfff1f2)),
-        ("Video", true) => (rgb(0xfb7185), rgb(0x2d0f18)),
-        ("Music", false) => (rgb(0xd97706), rgb(0xfffbeb)),
-        ("Music", true) => (rgb(0xfbbf24), rgb(0x2d1f06)),
-        ("Compressed", false) => (rgb(0x0d9488), rgb(0xf0fdfa)),
-        ("Compressed", true) => (rgb(0x2dd4bf), rgb(0x082f2c)),
-        ("Documents", false) => (rgb(0x0284c7), rgb(0xe0f2fe)),
-        ("Documents", true) => (rgb(0x38bdf8), rgb(0x0c2d48)),
-        ("Programs", false) => (rgb(0x059669), rgb(0xecfdf5)),
-        ("Programs", true) => (rgb(0x34d399), rgb(0x062d22)),
-        (_, false) => (rgb(0x475569), rgb(0xf1f5f9)),
-        (_, true) => (rgb(0x94a3b8), rgb(0x1e293b)),
-    }
+    let (fg, bg) = match (category, dark) {
+        ("Torrents", false) => (0x654cac, 0xeee7f7),
+        ("Torrents", true) => (0xbba5ed, 0x2e263e),
+        ("Video", false) => (0xa44463, 0xf7e7ed),
+        ("Video", true) => (0xeb9ab6, 0x3a2933),
+        ("Music", false) => (0x167361, 0xe4f1ec),
+        ("Music", true) => (0x81cfb9, 0x233632),
+        ("Compressed", false) => (0x8a5b20, 0xf7eee0),
+        ("Compressed", true) => (0xe2ba79, 0x3d3022),
+        ("Documents", false) => (0x325e9b, 0xe8eef8),
+        ("Documents", true) => (0x99b9ec, 0x263246),
+        ("Programs", false) => (0x476c35, 0xe9f0e5),
+        ("Programs", true) => (0xa4cb90, 0x2c3728),
+        (_, false) => (0x635e69, 0xeeecef),
+        (_, true) => (0xc0bbc6, 0x2d2a30),
+    };
+    (rgb(fg), rgb(bg))
 }
 
 fn theme_pref_path() -> Option<PathBuf> {
@@ -242,22 +227,17 @@ pub fn apply(dark: bool, cx: &mut App) {
         cx,
     );
     let p = palette(dark);
-    let btn_primary = if dark { rgb(0x0284c7) } else { p.primary };
-    let btn_primary_hover = if dark { rgb(0x0369a1) } else { p.primary_hover };
-    let btn_danger = rgb(0xe11d48);
-    let btn_danger_hover = rgb(0xbe123c);
-    let input_border = if dark { rgb(0x334155) } else { rgb(0xd4dce6) };
     Theme::update(cx, |t| {
         t.font_family = ".SystemUIFont".into();
         t.font_size = px(13.);
-        t.radius = px(7.);
-        t.radius_lg = px(14.);
+        t.radius = px(CONTROL_RADIUS);
+        t.radius_lg = px(PANE_RADIUS);
         t.shadow = false;
         t.focus_ring = true;
         t.background = p.modal_surface.into();
         t.foreground = p.ink.into();
         t.border = p.border.into();
-        t.input = input_border.into();
+        t.input = p.border.into();
         t.muted = p.soft.into();
         t.muted_foreground = p.muted.into();
         t.secondary = p.soft.into();
@@ -267,44 +247,28 @@ pub fn apply(dark: bool, cx: &mut App) {
         t.button_hover = p.soft.into();
         t.button_active = p.nav_hover.into();
         t.button_foreground = p.ink.into();
-        t.primary = p.primary.into();
-        t.primary_foreground = rgb(0xffffff).into();
+        t.primary = p.action.into();
+        t.primary_foreground = p.on_action.into();
         t.ring = p.primary.into();
         t.caret = p.primary.into();
-        t.button_primary = btn_primary.into();
-        t.button_primary_hover = btn_primary_hover.into();
-        t.button_primary_active = btn_primary_hover.into();
-        t.button_primary_foreground = rgb(0xffffff).into();
-        t.button_danger = btn_danger.into();
-        t.button_danger_hover = btn_danger_hover.into();
-        t.button_danger_active = btn_danger_hover.into();
+        t.button_primary = p.action.into();
+        t.button_primary_hover = p.action_hover.into();
+        t.button_primary_active = p.action_hover.into();
+        t.button_primary_foreground = p.on_action.into();
+        t.button_danger = rgb(0xa32e40).into();
+        t.button_danger_hover = rgb(0x8b2435).into();
+        t.button_danger_active = rgb(0x8b2435).into();
         t.button_danger_foreground = rgb(0xffffff).into();
         t.accent = p.accent_soft.into();
         t.accent_foreground = p.primary.into();
-        t.selection = if dark {
-            rgba(0x38bdf833).into()
-        } else {
-            rgba(0x0284c733).into()
-        };
-        t.switch = if dark {
-            rgb(0x334155).into()
-        } else {
-            rgb(0xcbd5e1).into()
-        };
+        t.selection = p.selected.into();
+        t.switch = p.progress_track.into();
         t.switch_thumb = rgb(0xffffff).into();
         t.popover = p.surface_elevated.into();
         t.popover_foreground = p.ink.into();
         t.scrollbar = p.modal_surface.into();
-        t.scrollbar_thumb = if dark {
-            rgba(0x47556999).into()
-        } else {
-            rgba(0x94a3b877).into()
-        };
-        t.scrollbar_thumb_hover = if dark {
-            rgba(0x64748bcc).into()
-        } else {
-            rgba(0x64748baa).into()
-        };
+        t.scrollbar_thumb = p.border.into();
+        t.scrollbar_thumb_hover = p.muted.into();
     });
 }
 

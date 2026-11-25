@@ -22,8 +22,14 @@ url.workspace = true
 open.workspace = true
 rfd = "0.17.2"
 
+[build-dependencies]
+embed-resource = "3.0.12"
+
 [lints]
 workspace = true
+
+[target.'cfg(windows)'.dependencies]
+windows-sys.workspace = true
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6.5"

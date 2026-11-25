@@ -59,7 +59,7 @@ ArchitecturesInstallIn64BitMode=x64compatible
 #endif
 MinVersion=10.0
 WizardStyle=modern
-SetupIconFile={#Root}\crates\app\assets\icons\app\mdm.ico
+SetupIconFile={#Root}\crates\desktop\assets\app-icon.ico
 UninstallDisplayIcon={app}\{#AppExe}
 UninstallDisplayName={#AppName}
 OutputDir={#Root}\target\dist

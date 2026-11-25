@@ -28,6 +28,21 @@ pub fn backend() -> std::path::PathBuf {
             std::env::consts::EXE_SUFFIX
         ))
 }
+
+pub fn quiet_command(program: impl AsRef<std::ffi::OsStr>) -> Command {
+    let command = Command::new(program);
+    #[cfg(windows)]
+    let command = {
+        use std::os::windows::process::CommandExt;
+        use windows_sys::Win32::System::Threading::CREATE_NO_WINDOW;
+
+        let mut command = command;
+        command.creation_flags(CREATE_NO_WINDOW);
+        command
+    };
+    command
+}
+
 fn request(value: Value) -> Value {
     match ndm_ipc::request(&ndm_ipc::Command {
         desktop: Some(value),
@@ -46,7 +61,7 @@ impl Bridge {
             let mut child: Option<Child> = None;
             let first = request(json!({"op":"list"}));
             if first.get("error").is_some() {
-                match Command::new(backend())
+                match quiet_command(backend())
                     .args(["--headless", "--desktop-service"])
                     .stdin(Stdio::null())
                     .stdout(Stdio::null())
@@ -90,7 +105,7 @@ impl Bridge {
                                 "nextdownloadmanager-nmhost{}",
                                 std::env::consts::EXE_SUFFIX
                             ));
-                            let value = match Command::new(host).arg("--register").output() {
+                            let value = match quiet_command(host).arg("--register").output() {
                                 Ok(out) if out.status.success() => json!({"ok":true}),
                                 Ok(out) => {
                                     json!({"error":String::from_utf8_lossy(&out.stderr).trim()})
