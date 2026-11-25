@@ -1,7 +1,5 @@
 # Next Download Manager desktop
 
-The native GPUI workspace uses Arke's compact desktop layout as a visual reference. A neutral window frame surrounds the sidebar and the download pane. Copper marks selection and primary actions. File categories and transfer states have their own semantic colors.
-
 ## Workspace
 
 - The title bar contains search, the sidebar toggle and the appearance switch alongside the platform window controls.

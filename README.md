@@ -4,15 +4,25 @@
   <img src="crates/desktop/assets/app-icon.png" alt="NDM 应用图标" width="112">
 </p>
 
-基于 Rust 的原生桌面下载管理器（当前版本 **`v0.0.1`**），界面采用 **GPUI + shadcn/ui 风格**（支持 macOS 原生毛玻璃与系统浅/深色跟随），下载核心与界面解耦设计。当前主要在 **macOS Apple Silicon** 上开发与验证。
+Next Download Manager 是基于 Rust 的原生桌面下载管理器，当前版本为 **`v0.0.1`**。GPUI 界面支持浅色、深色和跟随系统，下载任务由独立后台服务处理。
 
 > **项目说明**：本仓库是 [Mister Download Manager](https://github.com/anefzaoui/misterdownloadmanager) 的修改分支，由 [zekeeol](https://github.com/zekeeol) 维护修改（最近更新：**2026-11-24**）。项目基于原作者 **Ahmed Nefzaoui** 及上游贡献者的工作进行重构与扩展，保留 **GPL-3.0-or-later** 协议及全部原始署名。
 
-[快速开始](#快速开始macos) · [浏览器扩展](#浏览器扩展) · [架构概览](#架构概览) · [开发与检查](#开发与检查) · [上游说明与许可证](#上游说明与许可证)
+[界面预览](#界面预览) · [快速开始](#快速开始macos) · [浏览器扩展](#浏览器扩展) · [架构概览](#架构概览) · [开发与检查](#开发与检查) · [上游说明与许可证](#上游说明与许可证)
 
 ## 界面预览
 
-![NDM GPUI 原生桌面](docs/images/native-desktop.png)
+界面紧凑桌面布局，用细分隔线和圆角区分窗口、侧栏和下载区。浅色主题以浅灰和近白为底，深色主题以近黑和炭灰为底。两种主题都用铜橙色突出主要按钮和选中项，文件类别则用不同颜色的小图标区分。
+
+顶部搜索栏用于按文件名或 URL 筛选下载。左侧可折叠导航收纳任务状态、文件分类和主队列。中间下载区可切换列表和网格，右侧详情面板按需打开，显示所选任务的进度、速度和保存位置。底部状态栏显示服务连接、活动任务数、总下载速度和可用磁盘空间。
+
+### 浅色主题
+
+![Windows 浅色主题下的 NDM，显示下载列表和右侧详情面板](docs/images/desktop-light.png)
+
+### 深色主题
+
+![Windows 深色主题下的 NDM，显示下载列表和右侧详情面板](docs/images/desktop-dark.png)
 
 ## 当前功能与支持范围
 
@@ -20,10 +30,10 @@
 | --- | --- |
 | HTTP / HTTPS / FTP / FTPS | 支持分段并发、暂停续传、队列并发数控制、全局/单任务限速、流式速率平滑与完成平均速度/耗时统计 |
 | Torrent / 磁力链接 | 支持元数据预览、文件多选、Tracker / DHT / Peer 进度、多源 Extra Tracker 订阅同步、做种时间/分享率限制，并修复磁力元数据阶段 `left=0` 上报问题 |
-| GPUI 原生桌面 | macOS 原生毛玻璃窗体（`WindowBackgroundAppearance::Blurred`）、`System` / `Light` / `Dark` 三态实时主题、列表筛选搜索、连接详情与键盘导航 |
+| GPUI 原生桌面 | `System` / `Light` / `Dark` 实时主题、列表与网格、搜索与分类筛选、可切换的详情面板与键盘导航 |
 | 浏览器扩展（`v0.0.1`） | 支持下载接管、磁力链接、`.torrent` 预览、站点排除与打开应用 / 设置 |
 | 数据与持久化 | 独立 `core.json` 原子写入与备份恢复（默认数据目录可用 `NDM_DATA_DIR` 覆盖） |
-| 尚未迁入 / 平台说明 | 视频提取、图库、debrid 与完整调度界面暂未迁入 GPUI；Windows / Linux 尚未完成原生版验收 |
+| 尚未迁入 / 平台说明 | 视频提取、图库、debrid 与完整调度界面暂未迁入 GPUI；Windows x64 已完成本地打包与启动验证，Linux 尚未完成原生版验收 |
 
 详细变更记录见 [CHANGELOG.md](CHANGELOG.md)。
 
