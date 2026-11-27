@@ -21,10 +21,27 @@ fn dialog_footer(p: &t::Palette) -> Div {
 }
 
 fn settings_description(value: &'static str, p: &t::Palette) -> Div {
-    muted(value, p)
+    message_text(value).text_color(p.muted)
+}
+
+fn error_banner(value: impl Into<SharedString>, p: &t::Palette) -> Div {
+    row()
+        .items_start()
         .min_w_0()
-        .whitespace_normal()
-        .line_height(px(18.))
+        .p(px(10.))
+        .gap(px(8.))
+        .rounded(px(8.))
+        .bg(p.danger_soft)
+        .border_1()
+        .border_color(p.danger_border)
+        .child(
+            row().h(px(18.)).flex_shrink_0().child(
+                icon(IconName::CircleAlert)
+                    .size(px(15.))
+                    .text_color(p.danger),
+            ),
+        )
+        .child(message_text(value).flex_1().text_color(p.danger))
 }
 
 impl Shell {
@@ -138,40 +155,13 @@ impl Shell {
         let compact = height < 700.;
         // Keeping each body in its own function limits the stack used by GPUI
         // builder temporaries in unoptimized Windows builds.
-        let (mut content, footer_bar) = match panel {
+        let (content, footer_bar) = match panel {
             "add" => self.add_dialog(false, compact, p, cx),
             "torrent" => self.add_dialog(true, compact, p, cx),
             "progress" => self.progress_dialog(compact, p, cx),
             "remove" => self.remove_dialog(compact, p, cx),
             _ => self.settings_dialog(compact, p, cx),
         };
-
-        if let Some(notice) = &self.notice {
-            content = col()
-                .child(
-                    row()
-                        .mx(px(if compact { 16. } else { 20. }))
-                        .mt(px(if compact { 12. } else { 16. }))
-                        .p(px(10.))
-                        .gap(px(8.))
-                        .rounded(px(8.))
-                        .bg(p.danger_soft)
-                        .border_1()
-                        .border_color(p.danger_border)
-                        .child(
-                            icon(IconName::CircleAlert)
-                                .size(px(15.))
-                                .text_color(p.danger),
-                        )
-                        .child(
-                            text(notice.clone())
-                                .flex_1()
-                                .text_size(px(12.))
-                                .text_color(p.danger),
-                        ),
-                )
-                .child(content);
-        }
 
         let dialog_height = (height - 40.).min(match panel {
             "remove" => 280.,
@@ -242,22 +232,7 @@ impl Shell {
                     .when(panel == "settings", |d| {
                         d.child(self.settings_navigation(p, cx))
                     })
-                    .child(
-                        div()
-                            .id((
-                                "dialog-scroll",
-                                if panel == "settings" {
-                                    self.settings_tab
-                                } else {
-                                    0
-                                },
-                            ))
-                            .flex_1()
-                            .min_w_0()
-                            .min_h_0()
-                            .overflow_y_scroll()
-                            .child(content),
-                    ),
+                    .child(self.dialog_body(panel, compact, content, p)),
             )
             .child(footer_bar);
 
@@ -272,6 +247,41 @@ impl Shell {
             .child(dialog)
     }
 
+    fn dialog_body(&self, panel: &str, compact: bool, content: Div, p: &t::Palette) -> Div {
+        col()
+            .flex_1()
+            .min_w_0()
+            .min_h_0()
+            .when_some(self.notice.as_ref(), |body, notice| {
+                body.child(
+                    div()
+                        .id("dialog-notice")
+                        .flex_shrink_0()
+                        .max_h(px(144.))
+                        .overflow_y_scroll()
+                        .mx(px(if compact { 16. } else { 20. }))
+                        .mt(px(if compact { 12. } else { 16. }))
+                        .child(error_banner(notice.clone(), p)),
+                )
+            })
+            .child(
+                div()
+                    .id((
+                        "dialog-scroll",
+                        if panel == "settings" {
+                            self.settings_tab
+                        } else {
+                            0
+                        },
+                    ))
+                    .flex_1()
+                    .min_w_0()
+                    .min_h_0()
+                    .overflow_y_scroll()
+                    .child(content),
+            )
+    }
+
     fn add_dialog(
         &self,
         torrent: bool,
@@ -281,7 +291,7 @@ impl Shell {
     ) -> (Div, Div) {
         let mut content = dialog_content(compact);
         let mut footer_bar = dialog_footer(p);
-        content = content.child(helper_text(
+        content = content.child(settings_description(
             if torrent {
                 "Choose a .torrent file or paste a magnet link to inspect its contents."
             } else {
@@ -291,6 +301,7 @@ impl Shell {
         ));
         content = content.child(
             col()
+                .min_w_0()
                 .gap(px(6.))
                 .child(field_label(
                     if torrent {
@@ -300,7 +311,17 @@ impl Shell {
                     },
                     p,
                 ))
-                .child(Input::new(&self.source).cleanable(true)),
+                .child(
+                    div().w_full().min_w_0().child(
+                        Input::new(&self.source)
+                            .aria_label(if torrent {
+                                "Torrent source or magnet link"
+                            } else {
+                                "Download URL"
+                            })
+                            .cleanable(true),
+                    ),
+                ),
         );
 
         if torrent {
@@ -352,6 +373,7 @@ impl Shell {
                         .py(px(9.))
                         .flex_shrink_0()
                         .justify_between()
+                        .gap(px(8.))
                         .bg(p.table_header)
                         .rounded_t(px(7.))
                         .border_b_1()
@@ -363,6 +385,8 @@ impl Shell {
                                     .unwrap_or("Torrent")
                                     .to_owned(),
                             )
+                            .flex_1()
+                            .min_w_0()
                             .text_size(px(12.5))
                             .font_weight(FontWeight::SEMIBOLD)
                             .text_color(p.ink)
@@ -370,6 +394,7 @@ impl Shell {
                         )
                         .child(
                             text(format!("{} files", files.len()))
+                                .flex_shrink_0()
                                 .text_size(px(11.))
                                 .text_color(p.muted),
                         ),
@@ -431,6 +456,7 @@ impl Shell {
                         .min_h_0()
                         .items_center()
                         .justify_center()
+                        .px(px(12.))
                         .gap(px(8.))
                         .child(icon_tile(IconName::File, p.muted, p.soft, 36., 18.))
                         .child(muted(
@@ -441,17 +467,25 @@ impl Shell {
                             },
                             p,
                         ))
-                        .when_some(self.torrent["lookup"].as_object(), |c, _| {
-                            c.child(helper_text(
-                                format!(
-                                    "{} trackers · {} DHT nodes · {} peers · {} connected",
-                                    self.torrent["lookup"]["trackers"],
-                                    self.torrent["lookup"]["dht_nodes"],
-                                    self.torrent["lookup"]["peers"],
-                                    self.torrent["lookup"]["connected"]
-                                ),
-                                p,
-                            ))
+                        .when_some(self.torrent["lookup"].as_object(), |c, lookup| {
+                            let dht = if lookup["dht"] == true {
+                                format!("{} DHT nodes", lookup["dht_nodes"])
+                            } else {
+                                "DHT off".into()
+                            };
+                            let trackers = if lookup["trackers_syncing"] == true {
+                                "Syncing trackers…".into()
+                            } else {
+                                format!("{} trackers", lookup["trackers"])
+                            };
+                            c.child(
+                                message_text(format!(
+                                    "{trackers} · {dht} · {} peers · {} connected",
+                                    lookup["peers"], lookup["connected"]
+                                ))
+                                .text_center()
+                                .text_color(p.muted),
+                            )
                         }),
                 );
             }
@@ -602,7 +636,10 @@ impl Shell {
                                 )),
                         ),
                 )
-                .child(self.detail_tabs(p, cx));
+                .child(self.detail_tabs(p, cx))
+                .when_some(d.error.as_ref(), |el, error| {
+                    el.child(error_banner(error.clone(), p))
+                });
 
             if self.tab == 0 {
                 let resume = match self.detail["resumable"].as_bool() {
@@ -1475,12 +1512,10 @@ impl Shell {
                 p.success,
                 p.success_soft,
             )
+        } else if self.trackers_error.is_some() {
+            ("Tracker sync failed".to_owned(), p.danger, p.danger_soft)
         } else {
-            (
-                "No extra trackers configured".to_owned(),
-                p.muted,
-                p.surface,
-            )
+            ("No extra trackers loaded".to_owned(), p.muted, p.surface)
         };
 
         content = content
@@ -1595,6 +1630,9 @@ impl Shell {
                         "Extra tracker subscription URLs or direct trackers, one per line.",
                         p,
                     ))
+                    .when_some(self.trackers_error.as_ref(), |this, err| {
+                        this.child(error_banner(err.clone(), p))
+                    })
                     .child(Textarea::new(&self.tracker_urls).h(px(96.)))
                     .child(
                         row().justify_end().child(
@@ -1620,29 +1658,7 @@ impl Shell {
                                 cx.notify();
                             })),
                         ),
-                    )
-                    .when_some(self.trackers_error.as_ref(), |this, err| {
-                        this.child(
-                            row()
-                                .p(px(9.))
-                                .gap(px(8.))
-                                .rounded(px(7.))
-                                .bg(p.danger_soft)
-                                .border_1()
-                                .border_color(p.danger_border)
-                                .child(
-                                    icon(IconName::CircleAlert)
-                                        .size(px(14.))
-                                        .text_color(p.danger),
-                                )
-                                .child(
-                                    text(err.clone())
-                                        .flex_1()
-                                        .text_size(px(11.5))
-                                        .text_color(p.danger),
-                                ),
-                        )
-                    }),
+                    ),
             );
         content
     }

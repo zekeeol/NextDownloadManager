@@ -39,14 +39,6 @@ impl ThemePref {
         }
     }
 
-    pub fn next(self) -> Self {
-        match self {
-            Self::System => Self::Light,
-            Self::Light => Self::Dark,
-            Self::Dark => Self::System,
-        }
-    }
-
     pub fn is_dark(self, appearance: WindowAppearance) -> bool {
         match self {
             Self::Light => false,
@@ -282,7 +274,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn theme_pref_roundtrip_and_cycle() {
+    fn theme_pref_roundtrip() {
         assert_eq!(ThemePref::parse("system"), ThemePref::System);
         assert_eq!(ThemePref::parse("light"), ThemePref::Light);
         assert_eq!(ThemePref::parse("dark"), ThemePref::Dark);
@@ -291,10 +283,6 @@ mod tests {
         assert_eq!(ThemePref::System.as_str(), "system");
         assert_eq!(ThemePref::Light.as_str(), "light");
         assert_eq!(ThemePref::Dark.as_str(), "dark");
-
-        assert_eq!(ThemePref::System.next(), ThemePref::Light);
-        assert_eq!(ThemePref::Light.next(), ThemePref::Dark);
-        assert_eq!(ThemePref::Dark.next(), ThemePref::System);
     }
 
     #[test]

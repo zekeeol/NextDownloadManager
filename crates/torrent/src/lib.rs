@@ -577,7 +577,7 @@ impl Config {
 /// wait (#92): the sources asked, the peers they gave, and how many answered.
 #[derive(Default)]
 pub struct Lookup {
-    engine: Arc<librqbit::MetadataProgress>,
+    engine: std::sync::RwLock<Arc<librqbit::MetadataProgress>>,
     trackers: AtomicUsize,
     dht_on: AtomicBool,
     dht: OnceLock<librqbit::dht::Dht>,
@@ -606,7 +606,7 @@ pub struct LookupStatus {
 
 impl Lookup {
     pub fn status(&self) -> LookupStatus {
-        let e = &self.engine;
+        let e = self.engine.read().unwrap();
         let n = |c: &AtomicUsize| c.load(Ordering::Relaxed);
         LookupStatus {
             trackers: n(&self.trackers),
@@ -1034,7 +1034,18 @@ impl Torrents {
         wait: Duration,
         lookup: Option<&Lookup>,
     ) -> Result<Meta, TorrentError> {
-        let extra = self.extra_trackers.read().unwrap().clone();
+        let extra = self.extra_trackers();
+        self.metadata_with_trackers(src, wait, lookup, &extra).await
+    }
+
+    /// Use the tracker's current subscription result for this lookup only.
+    pub async fn metadata_with_trackers(
+        &self,
+        src: &Source,
+        wait: Duration,
+        lookup: Option<&Lookup>,
+        extra: &[String],
+    ) -> Result<Meta, TorrentError> {
         let mut orig_magnet_trackers: Option<Vec<String>> = None;
         let add = match src {
             // Only the trackers NDM may contact (#40, `trackers`).
@@ -1048,7 +1059,7 @@ impl Torrents {
                 let enriched = if extra.is_empty() {
                     m.clone()
                 } else {
-                    trackers::add_to_magnet(m, &extra)
+                    trackers::add_to_magnet(m, extra)
                 };
                 let m = trackers::filter_magnet(&enriched, self.proxied);
                 if let Some(l) = lookup {
@@ -1070,7 +1081,11 @@ impl Torrents {
         }
         let opts = AddTorrentOptions {
             list_only: true,
-            metadata_progress: lookup.map(|l| l.engine.clone()),
+            metadata_progress: lookup.map(|l| {
+                let progress = Arc::new(librqbit::MetadataProgress::default());
+                *l.engine.write().unwrap() = progress.clone();
+                progress
+            }),
             ..Default::default()
         };
         let res = tokio::time::timeout(wait, self.session.add_torrent(add, Some(opts)))

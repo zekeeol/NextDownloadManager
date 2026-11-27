@@ -193,10 +193,10 @@ impl Shell {
     }
 
     fn topbar(&self, width: f32, p: &t::Palette, cx: &mut Context<Self>) -> TitleBar {
-        let (theme_icon, next) = match self.theme_pref {
-            t::ThemePref::System => (IconName::Monitor, "Switch to light theme"),
-            t::ThemePref::Light => (IconName::Sun, "Switch to dark theme"),
-            t::ThemePref::Dark => (IconName::Moon, "Follow system theme"),
+        let (theme_icon, next, next_pref) = if self.dark {
+            (IconName::Moon, "Switch to light theme", t::ThemePref::Light)
+        } else {
+            (IconName::Sun, "Switch to dark theme", t::ThemePref::Dark)
         };
         let sidebar_tip = if self.sidebar_collapsed {
             "Show sidebar"
@@ -243,9 +243,11 @@ impl Shell {
             )
             .child(div().flex_1())
             .child(row().flex_shrink_0().px(px(6.)).child(
-                tool("toggle-theme", theme_icon, next).on_click(cx.listener(|s, _, w, cx| {
-                    s.set_theme_pref(s.theme_pref.next(), w, cx);
-                })),
+                div().occlude().child(
+                    tool("toggle-theme", theme_icon, next).on_click(
+                        cx.listener(move |s, _, w, cx| s.set_theme_pref(next_pref, w, cx)),
+                    ),
+                ),
             ))
     }
 
@@ -852,7 +854,7 @@ impl Shell {
                             el.child(info_row("Location", d.path.clone(), p))
                         })
                         .when_some(d.error.clone(), |el, error| {
-                            el.child(text(error).text_size(px(12.)).text_color(p.danger))
+                            el.child(message_text(error).text_color(p.danger))
                         }),
                 )
                 .child(
@@ -889,6 +891,7 @@ impl Shell {
     }
 
     fn footer(&self, p: &t::Palette) -> Div {
+        let connected = self.ready && self.service_error.is_none();
         row()
             .h(px(29.))
             .px(px(10.))
@@ -901,13 +904,15 @@ impl Shell {
             .child(
                 row()
                     .gap(px(6.))
-                    .child(div().size(px(6.)).rounded_full().bg(if self.ready {
+                    .child(div().size(px(6.)).rounded_full().bg(if connected {
                         p.success
                     } else {
                         p.warning
                     }))
-                    .child(if self.ready {
+                    .child(if connected {
                         "Service connected"
+                    } else if self.service_error.is_some() {
+                        "Waiting for download service…"
                     } else {
                         "Connecting…"
                     }),
@@ -1041,7 +1046,8 @@ impl Render for Shell {
                             .absolute()
                             .bottom(px(46.))
                             .right(px(20.))
-                            .max_w(px(460.))
+                            .w(px((width - 40.).clamp(0., 460.)))
+                            .items_start()
                             .p(px(9.))
                             .gap(px(8.))
                             .rounded(px(t::CONTROL_RADIUS))
@@ -1049,8 +1055,21 @@ impl Render for Shell {
                             .border_color(p.border)
                             .bg(p.modal_surface)
                             .shadow_md()
-                            .child(icon(IconName::Info).text_color(p.primary))
-                            .child(text(notice.clone()).flex_1())
+                            .child(
+                                row()
+                                    .h(px(26.))
+                                    .flex_shrink_0()
+                                    .child(icon(IconName::Info).text_color(p.primary)),
+                            )
+                            .child(
+                                div()
+                                    .flex_1()
+                                    .min_w_0()
+                                    .max_h(px(144.))
+                                    .id("notification-text")
+                                    .overflow_y_scroll()
+                                    .child(message_text(notice.clone()).py(px(4.))),
+                            )
                             .child(
                                 tool("dismiss", IconName::X, "Dismiss notification").on_click(
                                     cx.listener(|s, _, _, cx| {

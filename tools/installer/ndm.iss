@@ -13,6 +13,7 @@
   #define AppVersion "0.0.1"
 #endif
 #define AppName "Next Download Manager"
+#define PublisherName "zekeeol"
 #define AppExe "nextdownloadmanager.exe"
 #define HostExe "nextdownloadmanager-nmhost.exe"
 #define Root "..\.."
@@ -31,7 +32,7 @@ AppId={{667DB4D8-32C2-4487-A0E5-5825BF29778C}
 AppName={#AppName}
 AppVersion={#AppVersion}
 AppVerName={#AppName} {#AppVersion}
-AppPublisher=Ahmed Nefzaoui
+AppPublisher={#PublisherName}
 AppPublisherURL=https://github.com/anefzaoui/misterdownloadmanager
 AppSupportURL=https://github.com/anefzaoui/misterdownloadmanager/issues
 AppUpdatesURL=https://github.com/anefzaoui/misterdownloadmanager/releases
@@ -79,7 +80,7 @@ ChangesAssociations=yes
 ; fallback for anything else holding the files (a browser running the host).
 CloseApplications=yes
 VersionInfoVersion={#AppVersion}
-VersionInfoCompany=Ahmed Nefzaoui
+VersionInfoCompany={#PublisherName}
 VersionInfoDescription={#AppName} setup
 VersionInfoProductName={#AppName}
 #ifdef Sign

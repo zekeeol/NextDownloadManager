@@ -296,23 +296,15 @@ pub fn validate_source_url(raw: &str) -> Result<String, String> {
     if trimmed.is_empty() {
         return Err("Tracker URL cannot be empty".into());
     }
-    let parsed =
-        url::Url::parse(trimmed).map_err(|e| format!("Invalid tracker URL '{trimmed}': {e}"))?;
-    match parsed.scheme() {
-        "http" | "https" | "udp" => {}
-        scheme => {
-            return Err(format!(
-                "Unsupported tracker URL scheme '{scheme}' in '{trimmed}' (use http, https, or udp)"
-            ));
-        }
+    let parsed = url::Url::parse(trimmed).map_err(|e| format!("Invalid URL ({e})."))?;
+    if !matches!(parsed.scheme(), "http" | "https" | "udp") {
+        return Err("Use an HTTP, HTTPS or UDP URL.".into());
     }
     if parsed.host().is_none() {
-        return Err(format!("Tracker URL '{trimmed}' is missing a host"));
+        return Err("The URL is missing a host.".into());
     }
     if is_direct_tracker(trimmed) && !allowed(trimmed, false) {
-        return Err(format!(
-            "Direct tracker '{trimmed}' points to a local, private, or disallowed address"
-        ));
+        return Err("This tracker points to a local, private or disallowed address.".into());
     }
     Ok(trimmed.to_owned())
 }
@@ -410,6 +402,7 @@ pub fn replace(bytes: &[u8], trackers: &[String]) -> Option<Vec<u8>> {
 pub struct FetchOutcome {
     pub trackers: Vec<String>,
     pub succeeded: usize,
+    pub subscriptions_succeeded: usize,
     pub failed: Vec<(String, String)>,
 }
 
@@ -430,19 +423,31 @@ async fn fetch_one_source(
     if !matches!(parsed.scheme(), "http" | "https") {
         return Err("unsupported tracker URL scheme".to_owned());
     }
-    let mut resp = client.get(src).send().await.map_err(|e| e.to_string())?;
+    let mut resp = client
+        .get(src)
+        .send()
+        .await
+        .map_err(|e| e.without_url().to_string())?;
     let status = resp.status();
     if !status.is_success() {
         return Err(format!("HTTP {status}"));
     }
     let mut buf = Vec::new();
-    while let Some(chunk) = resp.chunk().await.map_err(|e| e.to_string())? {
+    while let Some(chunk) = resp
+        .chunk()
+        .await
+        .map_err(|e| e.without_url().to_string())?
+    {
         if buf.len() + chunk.len() > MAX_SUBSCRIPTION_BYTES {
             return Err("tracker list exceeds 2 MiB limit".to_owned());
         }
         buf.extend_from_slice(&chunk);
     }
-    Ok(parse_list(&String::from_utf8_lossy(&buf), proxied))
+    let trackers = parse_list(&String::from_utf8_lossy(&buf), proxied);
+    if trackers.is_empty() {
+        return Err("no usable trackers in the list".to_owned());
+    }
+    Ok(trackers)
 }
 
 /// Fetch and merge trackers from multiple subscription list URLs or direct tracker URLs.
@@ -466,12 +471,11 @@ pub async fn fetch_sources(sources: &[String], proxied: bool) -> FetchOutcome {
         Ok(c) => c,
         Err(e) => {
             return FetchOutcome {
-                trackers: Vec::new(),
-                succeeded: 0,
                 failed: unique
                     .into_iter()
                     .map(|u| (u, format!("HTTP client error: {e}")))
                     .collect(),
+                ..Default::default()
             };
         }
     };
@@ -489,6 +493,9 @@ pub async fn fetch_sources(sources: &[String], proxied: bool) -> FetchOutcome {
         match res {
             Ok(list) => {
                 outcome.succeeded += 1;
+                if !is_direct_tracker(&src) {
+                    outcome.subscriptions_succeeded += 1;
+                }
                 for t in list {
                     if seen_trackers.insert(t.clone()) {
                         outcome.trackers.push(t);
@@ -909,6 +916,7 @@ udp://tracker.two:6969/announce
             ];
             let outcome = fetch_sources(&sources, false).await;
             assert_eq!(outcome.succeeded, 3);
+            assert_eq!(outcome.subscriptions_succeeded, 2);
             assert_eq!(outcome.failed.len(), 1);
             assert_eq!(
                 outcome.trackers,

@@ -1,6 +1,15 @@
 use super::*;
 use ndm_torrent::authorized_storage::{self, PreparedFile};
 use std::{collections::HashSet, path::Path};
+
+pub(super) const DEFAULT_TRACKER_SUBSCRIPTION: &str =
+    "https://tracker.adysec.com/trackers_best.txt";
+const TRACKER_REFRESH_AGE: chrono::TimeDelta = chrono::TimeDelta::hours(24);
+const TRACKER_RETRY_INTERVAL: Duration = Duration::from_secs(15 * 60);
+const METADATA_TIMEOUT: Duration = Duration::from_secs(90);
+const METADATA_IDLE_GRACE: Duration = Duration::from_secs(35);
+const METADATA_IDLE_TIMEOUT: Duration = Duration::from_secs(15);
+
 impl Core {
     fn session(&mut self) -> Result<Arc<ndm_torrent::Torrents>, String> {
         if let Some(t) = &self.torrent {
@@ -46,7 +55,8 @@ impl Core {
         let mut seen = HashSet::new();
         for raw in raw_urls {
             for parsed in ndm_torrent::trackers::parse_config_urls(&raw) {
-                let valid = ndm_torrent::trackers::validate_source_url(&parsed)?;
+                let valid = ndm_torrent::trackers::validate_source_url(&parsed)
+                    .map_err(|e| format!("Tracker source {}: {e}", normalized.len() + 1))?;
                 if seen.insert(valid.clone()) {
                     normalized.push(valid);
                 }
@@ -84,6 +94,7 @@ impl Core {
             return Ok(());
         }
         if changed {
+            self.settings.trackers_updated = None;
             self.settings.extra_trackers = self
                 .settings
                 .tracker_urls
@@ -101,6 +112,32 @@ impl Core {
         Ok(())
     }
 
+    pub(super) fn refresh_trackers_if_due(&mut self) {
+        if self.tracker_sync.is_some()
+            || self
+                .last_tracker_sync
+                .is_some_and(|last| last.elapsed() < TRACKER_RETRY_INTERVAL)
+            || !self
+                .settings
+                .tracker_urls
+                .iter()
+                .any(|u| !ndm_torrent::trackers::is_direct_tracker(u))
+        {
+            return;
+        }
+        let fresh = self
+            .settings
+            .trackers_updated
+            .as_deref()
+            .and_then(|stamp| chrono::DateTime::parse_from_rfc3339(stamp).ok())
+            .is_some_and(|stamp| {
+                chrono::Utc::now().signed_duration_since(stamp) < TRACKER_REFRESH_AGE
+            });
+        if !fresh {
+            self.start_tracker_sync();
+        }
+    }
+
     pub(super) fn start_tracker_sync(&mut self) {
         if let Some(job) = self.tracker_sync.take() {
             job.task.abort();
@@ -115,12 +152,20 @@ impl Core {
             return;
         };
         let urls = self.settings.tracker_urls.clone();
+        let has_subscription = urls
+            .iter()
+            .any(|u| !ndm_torrent::trackers::is_direct_tracker(u));
+        let cached = self.settings.extra_trackers.clone();
         let (tx, rx) = tokio::sync::watch::channel(None);
         let task = rt.spawn(async move {
-            let outcome = ndm_torrent::trackers::fetch_sources(&urls, false).await;
+            let mut outcome = ndm_torrent::trackers::fetch_sources(&urls, false).await;
+            if has_subscription && outcome.subscriptions_succeeded == 0 {
+                outcome.trackers = cached;
+            }
             let _ = tx.send(Some(outcome));
         });
         self.tracker_sync_error = None;
+        self.last_tracker_sync = Some(Instant::now());
         self.tracker_sync = Some(TrackerSyncJob { rx, task });
     }
 
@@ -133,12 +178,12 @@ impl Core {
             return;
         };
         self.tracker_sync = None;
-        if outcome.succeeded > 0 || !outcome.trackers.is_empty() {
-            self.settings.extra_trackers = outcome.trackers;
+        if outcome.subscriptions_succeeded > 0 || outcome.failed.is_empty() {
             self.settings.trackers_updated = Some(chrono::Utc::now().to_rfc3339());
-            if let Some(t) = &self.torrent {
-                t.set_extra_trackers(self.settings.extra_trackers.clone());
-            }
+        }
+        self.settings.extra_trackers = outcome.trackers;
+        if let Some(t) = &self.torrent {
+            t.set_extra_trackers(self.settings.extra_trackers.clone());
         }
         self.tracker_sync_error = if outcome.failed.is_empty() {
             None
@@ -166,32 +211,15 @@ impl Core {
         let lookup = Arc::new(ndm_torrent::Lookup::default());
         let progress = lookup.clone();
         let task = if let Some(source) = ndm_torrent::Source::magnet(&source) {
+            self.refresh_trackers_if_due();
             let sync_rx = self.tracker_sync.as_ref().map(|j| j.rx.clone());
             let session = match self.session() {
                 Ok(t) => t,
                 Err(e) => return error(&e),
             };
-            session.set_extra_trackers(self.settings.extra_trackers.clone());
+            let extra = self.settings.extra_trackers.clone();
             tokio::spawn(async move {
-                if let Some(mut rx) = sync_rx {
-                    let _ =
-                        tokio::time::timeout(Duration::from_secs(10), rx.wait_for(|v| v.is_some()))
-                            .await;
-                    if let Some(outcome) = rx.borrow().as_ref()
-                        && !outcome.trackers.is_empty()
-                    {
-                        session.set_extra_trackers(outcome.trackers.clone());
-                    }
-                }
-                let result = session
-                    .metadata(&source, Duration::from_secs(90), Some(&progress))
-                    .await
-                    .map_err(|e| match e {
-                        ndm_torrent::TorrentError::MetadataTimeout => {
-                            "No peer sent the file list within 90 seconds. Check the network or click Read files to retry when peers are available.".into()
-                        }
-                        _ => e.to_string(),
-                    });
+                let result = resolve_magnet(&session, &source, &progress, &extra, sync_rx).await;
                 *out.lock().unwrap() = Some(result);
             })
         } else {
@@ -224,7 +252,7 @@ impl Core {
         match result.as_ref() {
             None => {
                 let s = job.lookup.status();
-                json!({"pending":true,"lookup":{"trackers":s.trackers,"dht":s.dht,"dht_nodes":s.dht_nodes,"peers":s.peers,"connected":s.connected,"failed":s.failed}})
+                json!({"pending":true,"lookup":{"trackers":s.trackers,"trackers_syncing":self.tracker_sync.is_some(),"dht":s.dht,"dht_nodes":s.dht_nodes,"peers":s.peers,"connected":s.connected,"failed":s.failed}})
             }
             Some(Err(e)) => error(e),
             Some(Ok(meta)) => {
@@ -515,6 +543,108 @@ impl Core {
         }
     }
 }
+async fn resolve_magnet(
+    session: &ndm_torrent::Torrents,
+    source: &ndm_torrent::Source,
+    progress: &ndm_torrent::Lookup,
+    cached: &[String],
+    sync: Option<tokio::sync::watch::Receiver<Option<ndm_torrent::trackers::FetchOutcome>>>,
+) -> Result<ndm_torrent::Meta, String> {
+    use ndm_torrent::TorrentError;
+    use tokio::time::{Instant, interval, timeout};
+
+    let started = Instant::now();
+    let deadline = started + METADATA_TIMEOUT;
+    let lookup = async {
+        let initial =
+            session.metadata_with_trackers(source, METADATA_TIMEOUT, Some(progress), cached);
+        let Some(mut sync) = sync else {
+            return initial.await;
+        };
+        let fresh = {
+            let refreshed = async {
+                let result = sync.wait_for(|result| result.is_some()).await.ok()?;
+                let trackers = &result.as_ref()?.trackers;
+                (!trackers.is_empty() && trackers != cached).then(|| trackers.clone())
+            };
+            tokio::pin!(initial, refreshed);
+            tokio::select! {
+                biased;
+                result = &mut initial => match result {
+                    Ok(_) | Err(TorrentError::NotATorrent | TorrentError::UnsafeName(_)) => return result,
+                    Err(_) => match refreshed.await {
+                        Some(trackers) => trackers,
+                        None => return result,
+                    },
+                },
+                fresh = &mut refreshed => match fresh {
+                    Some(trackers) => trackers,
+                    None => return initial.await,
+                },
+            }
+        };
+        session
+            .metadata_with_trackers(
+                source,
+                deadline.saturating_duration_since(Instant::now()),
+                Some(progress),
+                &fresh,
+            )
+            .await
+    };
+    let idle = async {
+        let mut tick = interval(Duration::from_secs(1));
+        let mut exhausted_since = None;
+        loop {
+            tick.tick().await;
+            let s = progress.status();
+            if s.peers > 0 && s.failed >= s.peers {
+                let since = exhausted_since
+                    .filter(|(peers, _)| *peers == s.peers)
+                    .map_or_else(Instant::now, |(_, since)| since);
+                exhausted_since = Some((s.peers, since));
+                if started.elapsed() >= METADATA_IDLE_GRACE
+                    && since.elapsed() >= METADATA_IDLE_TIMEOUT
+                {
+                    return Err(TorrentError::MetadataTimeout);
+                }
+            } else {
+                exhausted_since = None;
+            }
+        }
+    };
+    let result = timeout(METADATA_TIMEOUT, async {
+        tokio::select! {
+            result = lookup => result,
+            result = idle => result,
+        }
+    })
+    .await
+    .unwrap_or(Err(TorrentError::MetadataTimeout));
+    result.map_err(|e| {
+        let s = progress.status();
+        match e {
+            TorrentError::Engine(_) | TorrentError::MetadataTimeout
+                if !s.dht && s.trackers == 0 =>
+            {
+                "No discovery sources are available. Enable DHT or sync trackers, then retry."
+                    .into()
+            }
+            TorrentError::MetadataTimeout if s.peers == 0 => {
+                "No peers were found for this magnet. Check your connection or try again later."
+                    .into()
+            }
+            TorrentError::MetadataTimeout => {
+                "No peer provided the file list. Try again later or open a .torrent file.".into()
+            }
+            TorrentError::NotATorrent => {
+                "Enter a valid magnet link or choose a .torrent file.".into()
+            }
+            _ => e.to_string(),
+        }
+    })
+}
+
 fn prepare(root: &Path, paths: &[ndm_torrent_file::File]) -> std::io::Result<Vec<PreparedFile>> {
     checked_dir(root)?;
     paths
@@ -612,6 +742,58 @@ fn safe_open(root: &Path, path: &Path) -> std::io::Result<std::fs::File> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn existing_empty_tracker_settings_get_the_default_once() {
+        let data = tempfile::tempdir().unwrap();
+        let path = data.path().join("core.json");
+        let old = json!({
+            "version": 1,
+            "settings": {"tracker_urls": []},
+            "records": [],
+            "next_id": 1
+        });
+        std::fs::write(&path, old.to_string()).unwrap();
+
+        let mut core = Core::open(data.path().to_path_buf()).unwrap();
+        assert_eq!(core.settings.tracker_urls, [DEFAULT_TRACKER_SUBSCRIPTION]);
+        core.apply_tracker_urls(Vec::new(), false).unwrap();
+        core.save();
+
+        let reopened = Core::open(data.path().to_path_buf()).unwrap();
+        assert!(reopened.settings.tracker_urls.is_empty());
+    }
+
+    #[tokio::test]
+    async fn pending_subscription_is_used_by_the_open_preview() {
+        let temp = tempfile::tempdir().unwrap();
+        let mut config = ndm_torrent::Config::new(temp.path().to_path_buf());
+        config.offline = true;
+        config.dht = false;
+        let session = ndm_torrent::Torrents::start(config).await.unwrap();
+        let source = ndm_torrent::Source::magnet(
+            "magnet:?xt=urn:btih:6384d53c65bc94efeffc2447db33d25d4a8e139b",
+        )
+        .unwrap();
+        let progress = ndm_torrent::Lookup::default();
+        let (tx, rx) = tokio::sync::watch::channel(None);
+        let mut preview =
+            std::pin::pin!(resolve_magnet(&session, &source, &progress, &[], Some(rx)));
+        assert!(
+            tokio::time::timeout(Duration::from_millis(20), &mut preview)
+                .await
+                .is_err()
+        );
+        tx.send(Some(ndm_torrent::trackers::FetchOutcome {
+            trackers: vec!["https://test.example/announce".into()],
+            ..Default::default()
+        }))
+        .unwrap();
+        assert!(preview.await.is_err());
+        assert_eq!(progress.status().trackers, 1);
+        assert!(session.extra_trackers().is_empty());
+        session.stop().await;
+    }
 
     // Metadata-only magnet lookups discover peers which must be passed to the transfer.
     // No tracker or DHT can rediscover the loopback seeder in this test.

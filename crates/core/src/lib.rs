@@ -26,6 +26,8 @@ pub struct Settings {
     pub connections: u32,
     pub folder: PathBuf,
     pub tracker_urls: Vec<String>,
+    #[serde(default)]
+    tracker_subscription_initialized: bool,
     pub extra_trackers: Vec<String>,
     pub trackers_updated: Option<String>,
     pub max_concurrent: u32,
@@ -44,7 +46,8 @@ impl Default for Settings {
         Self {
             connections: 8,
             folder: dirs::download_dir().unwrap_or_else(|| PathBuf::from("downloads")),
-            tracker_urls: Vec::new(),
+            tracker_urls: vec![torrents::DEFAULT_TRACKER_SUBSCRIPTION.into()],
+            tracker_subscription_initialized: true,
             extra_trackers: Vec::new(),
             trackers_updated: None,
             max_concurrent: 4,
@@ -129,6 +132,7 @@ pub struct Core {
     previews: HashMap<String, PreviewJob>,
     tracker_sync: Option<TrackerSyncJob>,
     tracker_sync_error: Option<String>,
+    last_tracker_sync: Option<Instant>,
     global_limiter: Arc<ndm_engine::limiter::Limiter>,
     seeding_tick: HashMap<u64, Instant>,
     torrent_started: HashMap<u64, Instant>,
@@ -141,8 +145,17 @@ pub struct Core {
 impl Core {
     pub fn open(data: PathBuf) -> Result<Self, String> {
         ndm_ipc::private_dir(&data).map_err(|e| e.to_string())?;
-        let (settings, mut records, next_id) = persistence::load(&data)?;
+        let (mut settings, mut records, next_id) = persistence::load(&data)?;
         let mut dirty = false;
+        if !settings.tracker_subscription_initialized {
+            if settings.tracker_urls.is_empty() {
+                settings
+                    .tracker_urls
+                    .push(torrents::DEFAULT_TRACKER_SUBSCRIPTION.into());
+            }
+            settings.tracker_subscription_initialized = true;
+            dirty = true;
+        }
         for r in &mut records {
             if matches!(r.info.status.as_str(), "Downloading" | "Seeding") {
                 r.info.status = "Stopped".into();
@@ -178,6 +191,7 @@ impl Core {
             previews: HashMap::new(),
             tracker_sync: None,
             tracker_sync_error: None,
+            last_tracker_sync: None,
             global_limiter,
             seeding_tick: HashMap::new(),
             torrent_started: HashMap::new(),
@@ -801,13 +815,7 @@ impl Core {
         }
         self.tick_torrents();
         self.poll_tracker_sync();
-        if !self.settings.tracker_urls.is_empty()
-            && self.settings.extra_trackers.is_empty()
-            && self.tracker_sync.is_none()
-            && self.tracker_sync_error.is_none()
-        {
-            self.start_tracker_sync();
-        }
+        self.refresh_trackers_if_due();
         if self.queue_running {
             let active = self
                 .records

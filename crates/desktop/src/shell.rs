@@ -43,6 +43,7 @@ pub struct Shell {
     tab: usize,
     details: bool,
     notice: Option<String>,
+    service_error: Option<String>,
     ready: bool,
     torrent_token: Option<String>,
     torrent: Value,
@@ -83,6 +84,14 @@ fn text(value: impl Into<SharedString>) -> Div {
 
 fn muted(value: impl Into<SharedString>, p: &t::Palette) -> Div {
     text(value).text_color(p.muted).text_size(px(12.))
+}
+
+fn message_text(value: impl Into<SharedString>) -> Div {
+    text(value)
+        .min_w_0()
+        .whitespace_normal()
+        .line_height(px(18.))
+        .text_size(px(12.))
 }
 
 fn field_label(value: impl Into<SharedString>, p: &t::Palette) -> Div {
@@ -398,9 +407,8 @@ impl Shell {
         let torrent_seed_ratio = input("1.0", "Ratio (0 = unlimited)", window, cx);
         let torrent_peer_limit = input("128", "Peers (10–500)", window, cx);
         let tracker_urls = cx.new(|cx| {
-            TextareaState::new(window, cx).placeholder(
-                "One URL per line (tracker subscription URLs or direct trackers)\nhttps://raw.githubusercontent.com/adysec/tracker/main/trackers_best.txt",
-            )
+            TextareaState::new(window, cx)
+                .placeholder("Tracker subscription or announce URL, one per line")
         });
         let limit = input("1024", "KB per second", window, cx);
         let poll = cx.spawn_in(window, async move |this, cx| {
@@ -444,6 +452,7 @@ impl Shell {
             tab: 0,
             details: true,
             notice: None,
+            service_error: None,
             ready: false,
             torrent_token: None,
             torrent: Value::Null,
@@ -495,8 +504,37 @@ impl Shell {
         let mut changed = false;
         while let Ok(m) = self.bridge.rx.try_recv() {
             changed = true;
+            if m.value["service_error"] == true {
+                let error = m.value["error"]
+                    .as_str()
+                    .unwrap_or("The download service is unavailable.");
+                let updating_notice = self.service_error.is_some()
+                    && self.notice.as_deref() == self.service_error.as_deref();
+                self.service_error = Some(error.into());
+                if updating_notice
+                    || !matches!(
+                        m.tag.as_str(),
+                        "list" | "events" | "detail" | "torrent" | "settings-status" | "cancel"
+                    )
+                {
+                    self.notice = Some(error.into());
+                }
+                if m.tag == "trackers-sync" {
+                    self.trackers_syncing = false;
+                }
+                continue;
+            }
+            if m.tag != "browser-register"
+                && let Some(previous) = self.service_error.take()
+                && self.notice.as_deref() == Some(previous.as_str())
+            {
+                self.notice = None;
+            }
             if let Some(error) = m.value["error"].as_str() {
                 self.notice = Some(error.into());
+                if m.tag == "trackers-sync" {
+                    self.trackers_syncing = false;
+                }
                 if matches!(m.tag.as_str(), "inspect" | "torrent") {
                     if let Some(token) = self.torrent_token.take() {
                         self.bridge
@@ -755,7 +793,9 @@ impl Shell {
             self.bridge
                 .send("cancel", json!({"op":"torrent_cancel","token":token}));
         }
-        self.panel = None;
+        if self.panel.take().is_some() {
+            self.notice = None;
+        }
         self.torrent = Value::Null;
         self.chosen.clear();
     }
